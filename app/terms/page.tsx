@@ -1,0 +1,5 @@
+import { LegalPage } from "@/components/legal/legal-page";
+
+export default function TermsPage() {
+  return <LegalPage title="Termos de uso" intro="Use a plataforma para organizar sua galera com respeito e sem abusar dos serviços externos."><section><h2 className="text-xl font-bold text-foreground">Uso aceitável</h2><p className="mt-2">Não tente enumerar sessões, enviar conteúdo malicioso, automatizar spam, contornar limites ou usar integrações de forma contrária aos termos dos provedores.</p></section><section><h2 className="text-xl font-bold text-foreground">Conteúdo</h2><p className="mt-2">Você é responsável pelos nomes, links, imagens e observações incluídos manualmente. Dados externos podem ficar incompletos ou desatualizados.</p></section><section><h2 className="text-xl font-bold text-foreground">Disponibilidade</h2><p className="mt-2">Sessões rápidas expiram. Integrações opcionais podem ser desativadas quando indisponíveis sem impedir o uso de jogos manuais.</p></section></LegalPage>;
+}

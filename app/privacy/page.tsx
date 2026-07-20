@@ -1,0 +1,5 @@
+import { LegalPage } from "@/components/legal/legal-page";
+
+export default function PrivacyPage() {
+  return <LegalPage title="Privacidade" intro="Coletamos apenas o necessário para manter sua sessão e suas escolhas funcionando."><section><h2 className="text-xl font-bold text-foreground">Dados usados</h2><p className="mt-2">Identificador da conta, nome exibido, memberships, votos, propriedade declarada, tema e histórico de decisões. Códigos de convite e descrições privadas não são enviados para analytics.</p></section><section><h2 className="text-xl font-bold text-foreground">Contas temporárias</h2><p className="mt-2">Identidades anônimas ficam vinculadas ao navegador. Limpar os dados locais ou trocar de dispositivo pode impedir a recuperação até a conta ser convertida.</p></section><section><h2 className="text-xl font-bold text-foreground">Serviços</h2><p className="mt-2">Supabase processa autenticação e banco; Vercel/Sites hospedam a aplicação; Steam é consultada apenas pelo servidor quando habilitada.</p></section></LegalPage>;
+}
