@@ -7,11 +7,11 @@ export function ThemeProvider({ children }: PropsWithChildren) {
   return (
     <NextThemesProvider
       attribute="data-theme"
-      defaultTheme="dark"
+      defaultTheme="system"
       themes={["light", "dark", "dark-red"]}
-      enableSystem={false}
+      enableSystem
       disableTransitionOnChange
-      storageKey="jogajunto-theme"
+      storageKey="listed-theme"
     >
       {children}
     </NextThemesProvider>

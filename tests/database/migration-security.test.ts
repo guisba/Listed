@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const migration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260720123940_initial_jogajunto.sql"), "utf8");
+const migration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260720123940_initial_listed.sql"), "utf8");
 const exposedTables = ["profiles", "groups", "group_members", "sessions", "session_members", "session_invites", "catalog_games", "steam_app_index", "session_games", "votes", "game_ownership", "user_game_library", "decision_runs", "decision_results", "audit_logs"];
 
 describe("database security migration", () => {

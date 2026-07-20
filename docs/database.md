@@ -1,6 +1,6 @@
 # Banco de dados
 
-O schema inicial está em `supabase/migrations/20260720123940_initial_jogajunto.sql`; o hardening posterior registra grants e índices adicionais.
+O schema inicial está em `supabase/migrations/20260720123940_initial_listed.sql`; o hardening posterior registra grants e índices adicionais.
 
 ```mermaid
 erDiagram

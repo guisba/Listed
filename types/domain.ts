@@ -52,6 +52,7 @@ export interface SessionGame {
   created_at: string;
   vote_count?: number;
   owner_count?: number;
+  member_count?: number;
   has_voted?: boolean;
   ownership_status?: OwnershipStatus;
 }

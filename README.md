@@ -1,8 +1,8 @@
-# JogaJunto
+# Listed
 
-Uma plataforma em português para grupos criarem listas compartilhadas de jogos, compararem o que conseguem jogar, votarem em tempo real e registrarem a decisão da noite.
+**Listed é uma plataforma para grupos criarem listas compartilhadas de jogos, descobrirem quais opções funcionam para todos, votarem e decidirem o que jogar.**
 
-![Cartão social do JogaJunto](public/og.png)
+![Cartão social do Listed](public/og.png)
 
 ## Estado do produto
 
@@ -100,12 +100,12 @@ docs/                 arquitetura, banco, segurança e operação
 types/                domínio e tipos gerados do Supabase
 ```
 
-Consulte [arquitetura](docs/architecture.md), [banco](docs/database.md), [segurança](docs/security.md), [Steam](docs/steam-integration.md), [deploy](docs/deployment.md) e [decisões](docs/product-decisions.md).
+Consulte [identidade visual](docs/brand.md), [arquitetura](docs/architecture.md), [banco](docs/database.md), [segurança](docs/security.md), [Steam](docs/steam-integration.md), [deploy](docs/deployment.md) e [decisões](docs/product-decisions.md).
 
 ## Limitações conhecidas
 
 - Anonymous Sign-Ins precisa ser habilitado manualmente no Dashboard do Supabase.
-- Google, Discord, magic link e account linking ainda não possuem telas.
+- Google, Discord, magic link e account linking possuem interface; os providers exigem configuração no Supabase.
 - Detalhes de loja usam endpoint não documentado e permanecem atrás de feature flag.
 - Sync completo do catálogo, grupos permanentes e modos avançados são fundações de schema, não fluxos completos.
 - O E2E multicontexto depende de um ambiente Supabase de teste com autenticação anônima ativa.

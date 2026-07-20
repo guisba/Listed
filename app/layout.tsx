@@ -15,13 +15,15 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
-  title: { default: "JogaJunto — escolha o próximo jogo", template: "%s · JogaJunto" },
-  description: "Crie listas compartilhadas, compare bibliotecas, vote e escolha o jogo da noite com sua galera.",
-  openGraph: { title: "JogaJunto", description: "Menos debate. Mais partida.", type: "website", locale: "pt_BR", images: [{ url: "/og.png", width: 1733, height: 909, alt: "JogaJunto — Menos debate. Mais partida." }] },
-  twitter: { card: "summary_large_image", title: "JogaJunto", description: "Menos debate. Mais partida.", images: ["/og.png"] },
+  applicationName: "Listed",
+  title: { default: "Listed — Decida o que jogar", template: "%s · Listed" },
+  description: "Crie uma lista de jogos com seus amigos, importe informações da Steam, vote nas melhores opções e escolha o próximo jogo do grupo.",
+  openGraph: { title: "Listed — Decida o que jogar", description: "Liste. Vote. Jogue.", type: "website", siteName: "Listed", locale: "pt_BR", images: [{ url: "/og.png", width: 1733, height: 909, alt: "Listed — Liste. Vote. Jogue." }] },
+  twitter: { card: "summary_large_image", title: "Listed — Decida o que jogar", description: "Liste. Vote. Jogue.", images: ["/og.png"] },
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
+    apple: "/icon.svg",
   },
 };
 

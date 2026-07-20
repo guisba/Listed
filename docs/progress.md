@@ -3,10 +3,11 @@
 ## Concluído e verificado
 
 - Fundação App Router, TypeScript estrito, Tailwind, UI responsiva e três temas.
+- Identidade definitiva Listed, marca própria, tokens semânticos e referências visuais desktop/mobile para os três temas.
 - Schema Supabase remoto, duas migrations aplicadas, 15/15 tabelas com RLS, grants explícitos, Realtime e tipos gerados.
 - Criação/ingresso transacionais, sala, jogos manuais, votos, propriedade, filtros, sorteio e audit log.
 - Parser/adapter Steam, catálogo parcial e fallback manual.
-- lint, typecheck, 30 testes unitários/componentes, 4 execuções E2E e builds Next/Sites.
+- lint, typecheck, 32 testes unitários/componentes, 8 cenários E2E e builds Next/Sites.
 - CI do GitHub com lockfile, lint, tipos, testes e build Vercel.
 - audit de dependências sem vulnerabilidades altas ou críticas.
 
