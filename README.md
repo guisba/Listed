@@ -6,9 +6,9 @@
 
 ## Estado do produto
 
-O MVP inclui landing page, criação e entrada em sessões temporárias, identidade anônima Supabase, código curto, sala em tempo real, jogos manuais, busca Steam server-side/cache local, votos, propriedade, filtros, sorteio simples ou ponderado, administração básica, três temas e persistência PostgreSQL com RLS.
+O MVP inclui landing page, criação e entrada em sessões temporárias, identidade anônima Supabase, código curto, sala em tempo real, jogos manuais, seletor Steam com autocomplete local e prévia server-side, votos, propriedade, filtros, sorteio simples ou ponderado, administração básica, três temas e persistência PostgreSQL com RLS.
 
-Grupos permanentes, OAuth, upgrade de conta, importação completa do catálogo Steam e modos avançados já têm fundação no schema, mas continuam no roadmap.
+Grupos permanentes, OAuth, upgrade de conta e modos avançados já têm fundação no schema, mas continuam no roadmap. O catálogo Steam possui job incremental; executá-lo exige as credenciais server-only descritas abaixo.
 
 ## Stack
 
@@ -44,8 +44,9 @@ Abra `http://localhost:3000`. O comando `npm run dev` inicia a variante compatí
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | público | sim | chave moderna de baixo privilégio |
 | `SUPABASE_SECRET_KEY` | server-only | cron/admin | nunca vai ao browser |
 | `STEAM_WEB_API_KEY` | server-only | sync Steam | `IStoreService/GetAppList/v1` |
-| `CRON_SECRET` | server-only | cron | autentica limpeza |
+| `CRON_SECRET` | server-only | cron | autentica limpeza e sync Steam |
 | `STEAM_PROVIDER_ENABLED` | server-only | não | habilita detalhes instáveis da loja |
+| `STEAM_CATALOG_SYNC_ENABLED` | server-only | não | habilita o job oficial incremental |
 | `STEAM_COMMUNITY_TAGS_ENABLED` | server-only | não | permanece `false`; scraping é proibido |
 | `AI_RECOMMENDATIONS_ENABLED` | server-only | não | recomendações externas opcionais |
 
@@ -80,7 +81,7 @@ Os testes E2E instalam o navegador uma única vez com `npx playwright install ch
 ## Deploy
 
 1. Configure Development e Preview na Vercel com as variáveis públicas do projeto Supabase de desenvolvimento.
-2. Configure `SUPABASE_SECRET_KEY` e `CRON_SECRET` apenas se o cron for habilitado.
+2. Configure `SUPABASE_SECRET_KEY`, `CRON_SECRET` e `STEAM_WEB_API_KEY` somente no servidor; habilite os flags Steam no ambiente de Preview.
 3. Rode migrations e advisors.
 4. Faça push de uma branch e valide o Preview.
 5. Promova o mesmo artefato somente após smoke test.
@@ -107,7 +108,7 @@ Consulte [identidade visual](docs/brand.md), [arquitetura](docs/architecture.md)
 - Anonymous Sign-Ins precisa ser habilitado manualmente no Dashboard do Supabase.
 - Google, Discord, magic link e account linking possuem interface; os providers exigem configuração no Supabase.
 - Detalhes de loja usam endpoint não documentado e permanecem atrás de feature flag.
-- Sync completo do catálogo, grupos permanentes e modos avançados são fundações de schema, não fluxos completos.
+- O primeiro catálogo amplo exige `STEAM_WEB_API_KEY` e execução protegida de `/api/steam/sync`; sem isso, o bootstrap cobre apenas os casos de fumaça Terraria e Counter-Strike 2.
 - O E2E multicontexto depende de um ambiente Supabase de teste com autenticação anônima ativa.
 
 ## Roadmap

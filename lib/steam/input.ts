@@ -33,11 +33,18 @@ export function parseSteamInput(raw: string): SteamInput {
 export function stripExternalHtml(value: string | undefined) {
   if (!value) return null;
   return value
+    .replace(/<(br|\/p|\/div|\/li)>/gi, " ")
     .replace(/<[^>]*>/g, " ")
     .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_, code: string) => String.fromCodePoint(Number(code)))
+    .replace(/&#x([\da-f]+);/gi, (_, code: string) => String.fromCodePoint(Number.parseInt(code, 16)))
     .replace(/\s+/g, " ")
     .trim()
-    .slice(0, 1_000);
+    .slice(0, 12_000);
 }

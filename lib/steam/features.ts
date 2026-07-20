@@ -1,5 +1,6 @@
 const FEATURE_MAP: Array<[RegExp, string]> = [
   [/single-player/i, "singleplayer"],
+  [/multi-player|multiplayer/i, "multiplayer"],
   [/shared\/split screen co-op|local co-op/i, "coop-local"],
   [/online co-op/i, "coop-online"],
   [/shared\/split screen pvp|local pvp/i, "pvp-local"],

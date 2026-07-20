@@ -1,5 +1,7 @@
 import "server-only";
 
+import { SteamError, toSteamError } from "./errors";
+
 export interface SteamCatalogPage {
   apps: Array<{
     appid: number;
@@ -11,25 +13,47 @@ export interface SteamCatalogPage {
   last_appid: number;
 }
 
-export async function fetchSteamCatalogPage(lastAppId = 0) {
+export interface CatalogPageOptions {
+  lastAppId?: number;
+  ifModifiedSince?: number;
+  maxResults?: number;
+  fetcher?: typeof fetch;
+}
+
+export async function fetchSteamCatalogPage({
+  lastAppId = 0,
+  ifModifiedSince = 0,
+  maxResults = 1_000,
+  fetcher = fetch,
+}: CatalogPageOptions = {}) {
   const key = process.env.STEAM_WEB_API_KEY;
-  if (!key) throw new Error("STEAM_WEB_API_KEY não configurada.");
+  if (!key) throw new SteamError("sync_not_configured", 503);
 
   const inputJson = JSON.stringify({
-    key,
+    if_modified_since: ifModifiedSince || undefined,
     include_games: true,
     include_dlc: false,
     include_software: false,
     include_videos: false,
     include_hardware: false,
     last_appid: lastAppId,
-    max_results: 1_000,
+    max_results: Math.min(Math.max(maxResults, 100), 5_000),
   });
-  const response = await fetch(
-    `https://partner.steam-api.com/IStoreService/GetAppList/v1/?input_json=${encodeURIComponent(inputJson)}`,
-    { signal: AbortSignal.timeout(12_000), cache: "no-store" },
-  );
-  if (!response.ok) throw new Error(`Steam catalog respondeu ${response.status}.`);
-  const payload = (await response.json()) as { response: SteamCatalogPage };
+  const params = new URLSearchParams({ key, input_json: inputJson });
+
+  let response: Response;
+  try {
+    response = await fetcher(
+      `https://partner.steam-api.com/IStoreService/GetAppList/v1/?${params}`,
+      { signal: AbortSignal.timeout(12_000), cache: "no-store", headers: { Accept: "application/json" } },
+    );
+  } catch (error) {
+    throw toSteamError(error);
+  }
+  if (!response.ok) throw new SteamError("provider_unavailable", 502);
+  const payload = (await response.json()) as { response?: SteamCatalogPage };
+  if (!payload.response || !Array.isArray(payload.response.apps)) {
+    throw new SteamError("provider_unavailable", 502);
+  }
   return payload.response;
 }

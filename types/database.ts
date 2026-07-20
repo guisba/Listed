@@ -60,69 +60,102 @@ export type Database = {
           app_type: string
           cache_expires_at: string | null
           categories: string[]
+          coming_soon: boolean
           cover_image: string | null
           created_at: string
+          developers: string[]
           features: string[]
+          full_description: string | null
           genres: string[]
           header_image: string | null
           id: string
+          import_attempts: number
           is_free: boolean
+          last_import_attempt_at: string | null
+          last_import_error: string | null
           metadata_status: Database["public"]["Enums"]["metadata_status"]
+          metadata_updated_at: string | null
           name: string
           normalized_name: string
           platforms: string[]
+          price: Json | null
+          publishers: string[]
           raw_metadata: Json | null
+          release_date: string | null
           short_description: string | null
           source: Database["public"]["Enums"]["game_source"]
           source_updated_at: string | null
           steam_appid: number | null
           store_url: string | null
+          supported_languages: string[]
           updated_at: string
         }
         Insert: {
           app_type?: string
           cache_expires_at?: string | null
           categories?: string[]
+          coming_soon?: boolean
           cover_image?: string | null
           created_at?: string
+          developers?: string[]
           features?: string[]
+          full_description?: string | null
           genres?: string[]
           header_image?: string | null
           id?: string
+          import_attempts?: number
           is_free?: boolean
+          last_import_attempt_at?: string | null
+          last_import_error?: string | null
           metadata_status?: Database["public"]["Enums"]["metadata_status"]
+          metadata_updated_at?: string | null
           name: string
           normalized_name: string
           platforms?: string[]
+          price?: Json | null
+          publishers?: string[]
           raw_metadata?: Json | null
+          release_date?: string | null
           short_description?: string | null
           source?: Database["public"]["Enums"]["game_source"]
           source_updated_at?: string | null
           steam_appid?: number | null
           store_url?: string | null
+          supported_languages?: string[]
           updated_at?: string
         }
         Update: {
           app_type?: string
           cache_expires_at?: string | null
           categories?: string[]
+          coming_soon?: boolean
           cover_image?: string | null
           created_at?: string
+          developers?: string[]
           features?: string[]
+          full_description?: string | null
           genres?: string[]
           header_image?: string | null
           id?: string
+          import_attempts?: number
           is_free?: boolean
+          last_import_attempt_at?: string | null
+          last_import_error?: string | null
           metadata_status?: Database["public"]["Enums"]["metadata_status"]
+          metadata_updated_at?: string | null
           name?: string
           normalized_name?: string
           platforms?: string[]
+          price?: Json | null
+          publishers?: string[]
           raw_metadata?: Json | null
+          release_date?: string | null
           short_description?: string | null
           source?: Database["public"]["Enums"]["game_source"]
           source_updated_at?: string | null
           steam_appid?: number | null
           store_url?: string | null
+          supported_languages?: string[]
           updated_at?: string
         }
         Relationships: []
@@ -365,7 +398,9 @@ export type Database = {
           added_by: string
           catalog_game_id: string | null
           created_at: string
+          description: string | null
           features: string[]
+          game_mode: string | null
           id: string
           image_url: string | null
           max_players: number | null
@@ -379,13 +414,16 @@ export type Database = {
           source: Database["public"]["Enums"]["game_source"]
           steam_appid: number | null
           store_url: string | null
+          tags: string[]
           updated_at: string
         }
         Insert: {
           added_by: string
           catalog_game_id?: string | null
           created_at?: string
+          description?: string | null
           features?: string[]
+          game_mode?: string | null
           id?: string
           image_url?: string | null
           max_players?: number | null
@@ -399,13 +437,16 @@ export type Database = {
           source: Database["public"]["Enums"]["game_source"]
           steam_appid?: number | null
           store_url?: string | null
+          tags?: string[]
           updated_at?: string
         }
         Update: {
           added_by?: string
           catalog_game_id?: string | null
           created_at?: string
+          description?: string | null
           features?: string[]
+          game_mode?: string | null
           id?: string
           image_url?: string | null
           max_players?: number | null
@@ -419,6 +460,7 @@ export type Database = {
           source?: Database["public"]["Enums"]["game_source"]
           steam_appid?: number | null
           store_url?: string | null
+          tags?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -612,6 +654,81 @@ export type Database = {
         }
         Relationships: []
       }
+      steam_catalog_sync_runs: {
+        Row: {
+          apps_processed: number
+          completed_at: string | null
+          end_appid: number
+          errors: Json
+          id: string
+          pages_processed: number
+          start_appid: number
+          started_at: string
+          status: string
+          trigger_source: string
+        }
+        Insert: {
+          apps_processed?: number
+          completed_at?: string | null
+          end_appid?: number
+          errors?: Json
+          id?: string
+          pages_processed?: number
+          start_appid?: number
+          started_at?: string
+          status?: string
+          trigger_source: string
+        }
+        Update: {
+          apps_processed?: number
+          completed_at?: string | null
+          end_appid?: number
+          errors?: Json
+          id?: string
+          pages_processed?: number
+          start_appid?: number
+          started_at?: string
+          status?: string
+          trigger_source?: string
+        }
+        Relationships: []
+      }
+      steam_catalog_sync_state: {
+        Row: {
+          if_modified_since: number
+          last_appid: number
+          last_completed_at: string | null
+          last_error: string | null
+          last_started_at: string | null
+          processed_apps: number
+          singleton: boolean
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          if_modified_since?: number
+          last_appid?: number
+          last_completed_at?: string | null
+          last_error?: string | null
+          last_started_at?: string | null
+          processed_apps?: number
+          singleton?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          if_modified_since?: number
+          last_appid?: number
+          last_completed_at?: string | null
+          last_error?: string | null
+          last_started_at?: string | null
+          processed_apps?: number
+          singleton?: boolean
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_game_library: {
         Row: {
           catalog_game_id: string
@@ -735,6 +852,18 @@ export type Database = {
           platforms: string[]
           steam_appid: number
           store_url: string
+        }[]
+      }
+      search_steam_apps: {
+        Args: { result_limit?: number; search_query: string }
+        Returns: {
+          app_type: string
+          appid: number
+          cache_expires_at: string
+          catalog_game_id: string
+          header_image: string
+          metadata_status: Database["public"]["Enums"]["metadata_status"]
+          name: string
         }[]
       }
       unaccent_safe: { Args: { value: string }; Returns: string }

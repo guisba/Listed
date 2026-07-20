@@ -7,8 +7,10 @@ flowchart LR
   B[Browser] -->|Server Components| N[Next.js App Router]
   B -->|publishable key + JWT| S[Supabase Data API]
   B <-->|Realtime + Presence| R[Supabase Realtime]
-  N -->|server-only| ST[SteamProvider]
+  N -->|server-only, AppID selecionado| ST[SteamProvider]
   ST --> C[(catalog_games cache)]
+  B -->|nome + JWT| I[(steam_app_index)]
+  N -->|sync incremental| I
   S --> P[(PostgreSQL + RLS)]
   R --> P
   V[Vercel Cron] -->|Bearer CRON_SECRET| N
@@ -29,8 +31,8 @@ flowchart LR
 
 Criação e ingresso usam RPCs transacionais com `auth.uid()`. Depois do ingresso, leituras e mutations passam pela Data API com RLS. A sala carrega snapshot inicial e assina mudanças de membros, jogos, votos, propriedade, sessão e resultados; Presence mantém apenas IDs efêmeros.
 
-O catálogo Steam oficial é paginado por `last_appid` e `if_modified_since`. Detalhes da Store são um adapter instável. Sem chave/API, jogos manuais continuam disponíveis.
+O autocomplete nunca chama a Steam: ele pesquisa `steam_app_index` com trigram. Apenas AppID, URL ou seleção resolvida passa pelo cache e pelo adapter de detalhes. O catálogo oficial é paginado por `last_appid` e `if_modified_since`, com checkpoint por página e histórico de execução. Sem chave/API, jogos manuais continuam disponíveis.
 
 ## Cache e deploy
 
-Metadados armazenam `cache_expires_at` e status explícito. O build Vercel é Next nativo; o build Sites usa vinext/Cloudflare Worker a partir da mesma árvore App Router.
+Metadados armazenam `cache_expires_at`, `metadata_updated_at`, última tentativa/erro e status explícito. A confirmação Steam é mutation server-side; RLS continua sendo a última barreira de autorização. O build Vercel é Next nativo; o build Sites usa vinext/Cloudflare Worker a partir da mesma árvore App Router.

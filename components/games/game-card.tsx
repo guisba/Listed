@@ -51,7 +51,7 @@ export function ListedGameCard({ game, rank, onVote, onOwnership }: ListedGameCa
           {game.store_url ? <a href={game.store_url} target="_blank" rel="noreferrer" className="mt-0.5 shrink-0 text-muted-foreground transition-colors hover:text-foreground" aria-label={`Abrir ${game.name} na loja`}><ExternalLink className="size-3.5" /></a> : null}
         </div>
         <p className="mt-1.5 text-xs text-muted-foreground">{game.owner_count ?? 0} de {game.member_count ?? "?"} têm acesso</p>
-        <div className="mt-2 flex min-h-6 flex-wrap gap-1.5">{game.features.slice(0, 2).map((feature) => <Badge key={feature}>{feature}</Badge>)}{game.platforms.slice(0, 1).map((platform) => <Badge key={platform} className="bg-transparent">{platform}</Badge>)}</div>
+        <div className="mt-2 flex min-h-6 flex-wrap gap-1.5">{[...new Set([...game.features, ...game.platforms])].slice(0, 3).map((feature) => <Badge key={feature}>{feature}</Badge>)}</div>
       </div>
       <div className="col-span-2 grid grid-cols-[1fr_auto] items-center gap-2 sm:col-span-1 sm:grid-cols-1 sm:justify-items-end">
         <Button variant={voted ? "default" : "secondary"} onClick={toggleVote} aria-pressed={voted} className="min-w-28" disabled={votePending}>

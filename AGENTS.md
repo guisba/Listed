@@ -32,6 +32,9 @@
 - `IStoreService/GetAppList/v1` é a fonte oficial para sync incremental.
 - O endpoint `appdetails` da Store é instável e só pode ser usado atrás de `STEAM_PROVIDER_ENABLED`.
 - Toda chamada é server-side, com timeout, cache/fallback e sanitização.
+- Autocomplete pesquisa somente `steam_app_index`; nunca chame a Steam a cada tecla.
+- Sync exige `CRON_SECRET`, checkpoint por página e escrita com `SUPABASE_SECRET_KEY`.
+- Preserve os casos de fumaça Terraria/105600 e Counter-Strike 2/730 nos testes.
 
 ## Áreas sensíveis
 
