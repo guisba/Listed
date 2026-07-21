@@ -10,6 +10,7 @@ interface IndexRow {
   last_modified: number | null;
   price_change_number: number | null;
   is_available: boolean;
+  source: "official_store_service" | "individual_lookup";
 }
 
 function createAdmin({ startCursor = 0, modifiedSince = 0, acquired = true, existing = [] as IndexRow[] } = {}) {
@@ -28,7 +29,7 @@ function createAdmin({ startCursor = 0, modifiedSince = 0, acquired = true, exis
       return {
         select: vi.fn(() => ({ in: vi.fn(async (_column: string, ids: number[]) => ({ data: ids.map((id) => index.get(id)).filter(Boolean), error: null })) })),
         upsert: vi.fn(async (rows: Array<Record<string, unknown>>) => {
-          for (const row of rows) index.set(Number(row.appid), { appid: Number(row.appid), name: String(row.name), last_modified: Number(row.last_modified) || null, price_change_number: Number(row.price_change_number) || null, is_available: Boolean(row.is_available) });
+          for (const row of rows) index.set(Number(row.appid), { appid: Number(row.appid), name: String(row.name), last_modified: Number(row.last_modified) || null, price_change_number: Number(row.price_change_number) || null, is_available: Boolean(row.is_available), source: row.source as IndexRow["source"] });
           return { error: null };
         }),
       };
@@ -82,8 +83,8 @@ describe("runSteamCatalogSync", () => {
 
   it("separa inseridos, atualizados, ignorados e deduplica por AppID", async () => {
     const harness = createAdmin({ existing: [
-      { appid: 1, name: "Catalog Game 1", last_modified: 1_720_000_000, price_change_number: 10, is_available: true },
-      { appid: 2, name: "Nome antigo", last_modified: 1, price_change_number: 1, is_available: true },
+      { appid: 1, name: "Catalog Game 1", last_modified: 1_720_000_000, price_change_number: 10, is_available: true, source: "individual_lookup" },
+      { appid: 2, name: "Nome antigo", last_modified: 1, price_change_number: 1, is_available: true, source: "official_store_service" },
     ] });
     const fetchPage = vi.fn().mockResolvedValue(steamCatalogPage(0, 3, false));
     const { runSteamCatalogSync } = await import("@/lib/steam/catalog-sync");
@@ -91,6 +92,7 @@ describe("runSteamCatalogSync", () => {
 
     expect(result).toMatchObject({ inserted: 1, updated: 1, ignored: 1, received: 3 });
     expect(harness.index.size).toBe(3);
+    expect(harness.index.get(1)?.source).toBe("individual_lookup");
   });
 
   it("usa checkpoint separado e timestamp na sincronização incremental", async () => {

@@ -4,6 +4,9 @@ export type SteamErrorCode =
   | "provider_disabled"
   | "provider_timeout"
   | "provider_auth_rejected"
+  | "provider_invalid_key"
+  | "provider_publisher_key_required"
+  | "provider_upstream_forbidden"
   | "provider_unavailable"
   | "rate_limited"
   | "cache_unavailable"
@@ -15,6 +18,9 @@ const MESSAGES: Record<SteamErrorCode, string> = {
   provider_disabled: "A consulta de detalhes da Steam está temporariamente desativada. Você ainda pode incluir o jogo manualmente.",
   provider_timeout: "A Steam demorou para responder. Tente novamente em instantes ou use a inclusão manual.",
   provider_auth_rejected: "A autenticação do catálogo Steam foi rejeitada.",
+  provider_invalid_key: "A Steam não aceitou a credencial do catálogo.",
+  provider_publisher_key_required: "O host de publisher exige uma Publisher Web API Key.",
+  provider_upstream_forbidden: "A Steam recusou a chamada do catálogo; verifique host, credencial e allowlist.",
   provider_unavailable: "A Steam está indisponível no momento. Tente novamente em instantes ou use a inclusão manual.",
   rate_limited: "Muitas buscas em pouco tempo. Aguarde alguns segundos e tente novamente.",
   cache_unavailable: "Não foi possível salvar os detalhes no catálogo agora.",

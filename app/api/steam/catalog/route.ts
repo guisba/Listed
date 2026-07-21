@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSteamCatalogStatus, runSteamCatalogSync } from "@/lib/steam/catalog-sync";
 import { SteamError } from "@/lib/steam/errors";
+import { validateSteamCatalogHosts } from "@/lib/steam/catalog-provider";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 const actionSchema = z.object({
-  action: z.enum(["continue_bootstrap", "run_incremental", "reprocess_failures"]),
+  action: z.enum(["continue_bootstrap", "run_incremental", "reprocess_failures", "validate_provider_hosts"]),
   pages: z.number().int().min(1).max(100).optional(),
 });
 
@@ -37,6 +38,9 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: "Ação administrativa inválida." }, { status: 400 });
 
   try {
+    if (parsed.data.action === "validate_provider_hosts") {
+      return NextResponse.json(await validateSteamCatalogHosts());
+    }
     const mode = parsed.data.action === "run_incremental" ? "incremental" : "full";
     const result = await runSteamCatalogSync({
       mode,

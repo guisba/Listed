@@ -24,6 +24,7 @@ interface ExistingIndexRow {
   last_modified: number | null;
   price_change_number: number | null;
   is_available: boolean;
+  source: "official_store_service" | "legacy_public_applist" | "individual_lookup";
 }
 
 export interface SteamCatalogStatus {
@@ -69,7 +70,7 @@ interface SyncOptions {
   now?: () => number;
 }
 
-const INDEX_SELECT = "appid,name,last_modified,price_change_number,is_available";
+const INDEX_SELECT = "appid,name,last_modified,price_change_number,is_available,source";
 const STATE_SELECT = "status,sync_mode,catalog_complete,total_indexed,last_appid_checkpoint,last_page_size,bootstrap_started_at,bootstrap_completed_at,last_full_sync_at,last_incremental_sync_at,last_completed_at,last_error,lease_expires_at,provider";
 
 function asNumber(value: unknown) {
@@ -152,9 +153,12 @@ async function persistPage(admin: SupabaseClient, rows: ReturnType<typeof pageRo
       else ignored += 1;
     }
 
+    const writeChunk = chunk.map((row) => current.get(row.appid)?.source === "individual_lookup"
+      ? { ...row, source: "individual_lookup" as const }
+      : row);
     const { error: writeError } = await admin
       .from("steam_app_index")
-      .upsert(chunk, { onConflict: "appid" });
+      .upsert(writeChunk, { onConflict: "appid" });
     if (writeError) throw new SteamError("cache_unavailable", 503, { cause: writeError });
   }
 
