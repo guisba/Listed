@@ -150,10 +150,12 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
   const [hasMore, setHasMore] = useState(false);
   const [adding, setAdding] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [visibleAppids, setVisibleAppids] = useState<number[]>([]);
   const requestSequence = useRef(0);
   const enrichmentSequence = useRef(0);
   const controller = useRef<AbortController | null>(null);
   const enrichmentController = useRef<AbortController | null>(null);
+  const resultsViewport = useRef<HTMLDivElement | null>(null);
   const skipNextDebouncedSearch = useRef(false);
 
   const requestGames = useCallback(async (value: string, signal?: AbortSignal, offset = 0) => {
@@ -213,9 +215,36 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
   }, [query, requestGames]);
 
   useEffect(() => {
+    const root = resultsViewport.current;
+    if (!root || !matches.length) {
+      return;
+    }
+    const nodes = Array.from(root.querySelectorAll<HTMLElement>("[data-steam-appid]"));
+    if (typeof IntersectionObserver === "undefined") {
+      const timer = window.setTimeout(() => setVisibleAppids(matches.slice(0, 12).map((match) => match.appid)), 0);
+      return () => window.clearTimeout(timer);
+    }
+    const visible = new Set<number>();
+    const publish = () => {
+      const next = matches.map((match) => match.appid).filter((appid) => visible.has(appid));
+      setVisibleAppids((current) => current.length === next.length && current.every((appid, index) => appid === next[index]) ? current : next);
+    };
+    const observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const appid = Number((entry.target as HTMLElement).dataset.steamAppid);
+        if (entry.isIntersecting) visible.add(appid);
+        else visible.delete(appid);
+      }
+      publish();
+    }, { root, threshold: 0.2 });
+    nodes.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, [matches]);
+
+  useEffect(() => {
     enrichmentController.current?.abort();
     const appids = matches
-      .filter((match) => !match.capsuleImageUrl && (match.imageStatus === "unknown" || match.imageStatus === "stale"))
+      .filter((match) => visibleAppids.includes(match.appid) && !match.capsuleImageUrl && (match.imageStatus === "unknown" || match.imageStatus === "stale"))
       .slice(0, 12)
       .map((match) => match.appid);
     if (!appids.length) return;
@@ -246,7 +275,7 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
       }
     })();
     return () => nextController.abort();
-  }, [matches]);
+  }, [matches, visibleAppids]);
 
   function updateQuery(value: string) {
     setQuery(value);
@@ -330,13 +359,14 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
         </div>
       </div>
       <CatalogNotice catalog={catalog} />
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div ref={resultsViewport} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {loading && !matches.length ? <ResultSkeletons /> : matches.length ? (
           <div id={listboxId} role="listbox" className="space-y-2 p-3">
             {matches.map((match, index) => (
               <button
                 id={`${listboxId}-${index}`}
                 key={match.appid}
+                data-steam-appid={match.appid}
                 type="button"
                 role="option"
                 aria-selected={preview?.appid === match.appid || index === activeIndex}
