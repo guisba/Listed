@@ -103,6 +103,15 @@ describe("runSteamCatalogSync", () => {
     expect(fetchPage).toHaveBeenCalledWith(expect.objectContaining({ lastAppId: 700, ifModifiedSince: 1_710_000_000 }));
   });
 
+  it("contabiliza item inválido como ignorado e não o persiste", async () => {
+    const harness = createAdmin();
+    const page = { ...steamCatalogPage(0, 2, false), invalid_items: 1 };
+    const { runSteamCatalogSync } = await import("@/lib/steam/catalog-sync");
+    const result = await runSteamCatalogSync({ mode: "full", triggerSource: "manual", admin: harness.admin, fetchPage: vi.fn().mockResolvedValue(page) });
+    expect(result).toMatchObject({ received: 3, inserted: 2, ignored: 1, errors: 0 });
+    expect(harness.index.size).toBe(2);
+  });
+
   it("recusa uma execução concorrente", async () => {
     const harness = createAdmin({ acquired: false });
     const fetchPage = vi.fn();

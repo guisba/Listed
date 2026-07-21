@@ -230,22 +230,24 @@ export async function runSteamCatalogSync({
       const rows = pageRows(page, mode, claim.generation, new Date(now()).toISOString());
       const previousCursor = cursor;
       const persisted = await persistPage(admin, rows);
-      received += rows.length;
+      const invalidItems = asNumber(page.invalid_items);
+      const rawPageSize = rows.length + invalidItems;
+      received += rawPageSize;
       inserted += persisted.inserted;
       updated += persisted.updated;
-      ignored += persisted.ignored;
+      ignored += persisted.ignored + invalidItems;
       pagesProcessed += 1;
 
       const pageCursor = asNumber(page.last_appid || rows.at(-1)?.appid || cursor);
       cursor = pageCursor;
-      reachedEnd = !page.have_more_results || rows.length === 0 || pageCursor <= previousCursor;
+      reachedEnd = !page.have_more_results || rawPageSize === 0 || pageCursor <= previousCursor;
 
       const { data: checkpointed, error: checkpointError } = await admin.rpc("checkpoint_steam_catalog_sync", {
         claim_token: claim.claim_token,
         requested_mode: mode,
         next_cursor: cursor,
-        page_size: rows.length,
-        received_delta: rows.length,
+        page_size: rawPageSize,
+        received_delta: rawPageSize,
       });
       if (checkpointError || checkpointed !== true) {
         throw new SteamError("cache_unavailable", 503, { cause: checkpointError });

@@ -16,7 +16,7 @@ const steamCatalogItemSchema = z.object({
 
 const steamCatalogResponseSchema = z.object({
   response: z.object({
-    apps: z.array(steamCatalogItemSchema),
+    apps: z.array(z.unknown()),
     have_more_results: z.boolean().optional().default(false),
     last_appid: z.number().int().nonnegative().optional(),
   }).passthrough(),
@@ -31,6 +31,7 @@ export interface SteamCatalogPage {
   }>;
   have_more_results: boolean;
   last_appid: number;
+  invalid_items?: number;
 }
 
 export type SteamCatalogAuthMode = "query" | "header";
@@ -88,6 +89,7 @@ export interface SteamHostProbeResult {
   reason: ProviderValidationResult["reason"];
   stage?: "content_type" | "html" | "json" | "schema" | "pagination";
   schemaIssues?: Array<{ path: string; code: string }>;
+  invalidItemCount?: number;
 }
 
 function configuredKey() {
@@ -175,7 +177,13 @@ async function parseCatalogResponse(response: Response): Promise<SteamCatalogPag
     });
   }
 
-  const apps = parsed.data.response.apps;
+  const apps: SteamCatalogPage["apps"] = [];
+  let invalidItems = 0;
+  for (const candidate of parsed.data.response.apps) {
+    const item = steamCatalogItemSchema.safeParse(candidate);
+    if (item.success) apps.push(item.data);
+    else invalidItems += 1;
+  }
   const lastAppId = parsed.data.response.last_appid ?? apps.at(-1)?.appid ?? 0;
   if (parsed.data.response.have_more_results && (!apps.length || lastAppId <= 0)) {
     throw new SteamError("provider_unavailable", 502, { cause: { stage: "pagination" } });
@@ -184,6 +192,7 @@ async function parseCatalogResponse(response: Response): Promise<SteamCatalogPag
     apps,
     have_more_results: parsed.data.response.have_more_results,
     last_appid: lastAppId,
+    invalid_items: invalidItems,
   };
 }
 
@@ -262,6 +271,7 @@ async function probeSteamCatalogHost(baseUrl: string, fetcher: typeof fetch, las
       hasMore: page.have_more_results,
       accepted: true,
       reason: "accepted",
+      invalidItemCount: page.invalid_items ?? 0,
     };
   } catch (error) {
     const cause = error instanceof SteamError && error.cause && typeof error.cause === "object"

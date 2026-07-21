@@ -119,6 +119,23 @@ describe("fetchSteamCatalogPage", () => {
     await expect(fetchSteamCatalogPage({ fetcher, attempts: 1 })).rejects.toMatchObject({ code: "provider_unavailable" });
   });
 
+  it("descarta e contabiliza itens inválidos sem bloquear a página válida", async () => {
+    const fetcher = vi.fn().mockResolvedValue(jsonResponse({ response: {
+      apps: [
+        { appid: 10, name: "Valid Game", last_modified: 1, price_change_number: 1 },
+        { appid: 11, name: "", last_modified: 1, price_change_number: 1 },
+      ],
+      have_more_results: true,
+      last_appid: 11,
+    } }));
+    const { fetchSteamCatalogPage } = await import("@/lib/steam/catalog-provider");
+    await expect(fetchSteamCatalogPage({ fetcher, attempts: 1 })).resolves.toMatchObject({
+      apps: [{ appid: 10, name: "Valid Game" }],
+      invalid_items: 1,
+      last_appid: 11,
+    });
+  });
+
   it("envia a chave por header sem duplicá-la na query", async () => {
     const fetcher = vi.fn().mockResolvedValue(jsonResponse({ response: {
       apps: [], have_more_results: false, last_appid: 0,
