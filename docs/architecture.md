@@ -7,7 +7,7 @@ flowchart LR
   B[Browser] -->|Server Components| N[Next.js App Router]
   B -->|publishable key + JWT| S[Supabase Data API]
   B <-->|Realtime + Presence| R[Supabase Realtime]
-  N -->|server-only, AppID selecionado| ST[SteamProvider]
+  N -->|server-only, AppID ou lote visível| ST[SteamProvider]
   ST --> C[(catalog_games cache)]
   B -->|nome + JWT| I[(steam_app_index)]
   N -->|sync incremental| I
@@ -31,10 +31,10 @@ flowchart LR
 
 Criação e ingresso usam RPCs transacionais com `auth.uid()`. Depois do ingresso, leituras e mutations passam pela Data API com RLS. A sala carrega snapshot inicial e assina mudanças de membros, jogos, votos, propriedade, sessão e resultados; Presence mantém apenas IDs efêmeros.
 
-O autocomplete nunca chama a Steam: ele pesquisa `steam_app_index` com trigram. Apenas AppID, URL ou seleção resolvida passa pelo cache e pelo adapter de detalhes. O catálogo oficial é paginado por `last_appid` e `if_modified_since`, com checkpoint por página e histórico de execução.
+O autocomplete nunca chama a Steam: ele pesquisa `steam_app_index` com trigram. A resposta textual inclui imagens e popularidade já armazenadas. Uma segunda requisição opcional recebe somente até 12 AppIDs visíveis sem cápsula, respeita cancelamento do cliente, usa concorrência 3 e passa pelo mesmo cache antes do adapter de detalhes. AppID e URL preservam o fluxo direto. O catálogo oficial é paginado por `last_appid` e `if_modified_since`, com checkpoint por página e histórico de execução.
 
 Há dois providers operacionais: `official_store_service`, no host público da Web API, para bootstrap e atualização incremental; e `individual_lookup`, para detalhes sob demanda. O host de publisher fica reservado a integrações futuras com Publisher Web API Key. Jogos manuais, AppID e URL continuam disponíveis mesmo durante um sync.
 
 ## Cache e deploy
 
-Metadados armazenam `cache_expires_at`, `metadata_updated_at`, última tentativa/erro e status explícito. A confirmação Steam é mutation server-side; RLS continua sendo a última barreira de autorização. O build Vercel é Next nativo; o build Sites usa vinext/Cloudflare Worker a partir da mesma árvore App Router.
+Metadados armazenam `cache_expires_at`, `metadata_updated_at`, última tentativa/erro e status explícito. O índice guarda apenas URLs de imagem, status e score agregado; contagens de popularidade ficam no schema `private`. A confirmação Steam é mutation server-side; RLS continua sendo a última barreira de autorização. O build Vercel é Next nativo; o build Sites usa vinext/Cloudflare Worker a partir da mesma árvore App Router.

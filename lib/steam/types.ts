@@ -14,6 +14,7 @@ export interface SteamGame {
   type: string;
   storeUrl: string;
   headerImage: string | null;
+  capsuleImage: string | null;
   coverImage: string | null;
   shortDescription: string | null;
   fullDescription: string | null;
@@ -28,6 +29,7 @@ export interface SteamGame {
   supportedLanguages: string[];
   price: SteamPrice | null;
   isFree: boolean;
+  recommendationsTotal: number | null;
   metadataStatus: SteamMetadataStatus;
 }
 
@@ -43,9 +45,12 @@ export interface SteamSearchMatch {
   type: string;
   id: string | null;
   headerImage: string | null;
+  capsuleImageUrl: string | null;
+  imageStatus: "unknown" | "available" | "missing" | "failed" | "stale";
   releaseDate: string | null;
   platforms: string[];
   relevance: number;
+  matchKind?: "appid_exact" | "exact" | "normalized_exact" | "prefix" | "word_prefix" | "similarity" | "contains";
   metadataStatus: SteamMetadataStatus | null;
   cacheExpiresAt: string | null;
   source?: "official_store_service" | "legacy_public_applist" | "individual_lookup";

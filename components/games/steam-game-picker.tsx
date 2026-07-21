@@ -44,6 +44,10 @@ interface SearchPayload {
   pagination?: { limit: number; offset: number; total: number; hasMore: boolean };
 }
 
+interface EnrichmentPayload {
+  images?: Array<Pick<SteamSearchMatch, "appid" | "capsuleImageUrl" | "imageStatus">>;
+}
+
 function isPreview(game: SteamSearchMatch | SteamGamePreview): game is SteamGamePreview {
   return "storeUrl" in game;
 }
@@ -70,6 +74,35 @@ function ResultSkeletons() {
         </div>
       ))}
     </div>
+  );
+}
+
+function ResultImage({ match }: { match: SteamSearchMatch }) {
+  const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const imageUrl = failed ? null : match.capsuleImageUrl;
+  const waiting = !imageUrl && (match.imageStatus === "unknown" || match.imageStatus === "stale");
+
+  if (waiting) {
+    return <span aria-hidden="true" className="h-[39px] w-[104px] shrink-0 animate-pulse rounded-lg bg-secondary motion-reduce:animate-none sm:h-[45px] sm:w-[120px]" />;
+  }
+  if (!imageUrl) {
+    return <span aria-hidden="true" className="grid h-[39px] w-[104px] shrink-0 place-items-center rounded-lg bg-secondary sm:h-[45px] sm:w-[120px]"><PackageSearch className="size-5 text-muted-foreground" /></span>;
+  }
+  return (
+    <span className="relative h-[39px] w-[104px] shrink-0 overflow-hidden rounded-lg bg-secondary sm:h-[45px] sm:w-[120px]">
+      {!loaded ? <span aria-hidden="true" className="absolute inset-0 animate-pulse bg-secondary motion-reduce:animate-none" /> : null}
+      <Image
+        src={imageUrl}
+        alt={`Cápsula de ${match.name}`}
+        fill
+        sizes="(max-width: 639px) 104px, 120px"
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        onError={() => setFailed(true)}
+        className={`object-cover motion-safe:transition-opacity motion-safe:duration-200 ${loaded ? "opacity-100" : "opacity-0"}`}
+      />
+    </span>
   );
 }
 
@@ -118,7 +151,9 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
   const [adding, setAdding] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const requestSequence = useRef(0);
+  const enrichmentSequence = useRef(0);
   const controller = useRef<AbortController | null>(null);
+  const enrichmentController = useRef<AbortController | null>(null);
   const skipNextDebouncedSearch = useRef(false);
 
   const requestGames = useCallback(async (value: string, signal?: AbortSignal, offset = 0) => {
@@ -177,8 +212,46 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
     };
   }, [query, requestGames]);
 
+  useEffect(() => {
+    enrichmentController.current?.abort();
+    const appids = matches
+      .filter((match) => !match.capsuleImageUrl && (match.imageStatus === "unknown" || match.imageStatus === "stale"))
+      .slice(0, 12)
+      .map((match) => match.appid);
+    if (!appids.length) return;
+
+    const sequence = ++enrichmentSequence.current;
+    const nextController = new AbortController();
+    enrichmentController.current = nextController;
+    void (async () => {
+      try {
+        const response = await fetch("/api/steam/search/enrich", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ appids }),
+          signal: nextController.signal,
+        });
+        if (!response.ok) return;
+        const payload = await response.json() as EnrichmentPayload;
+        if (sequence !== enrichmentSequence.current || nextController.signal.aborted) return;
+        const byAppid = new Map((payload.images ?? []).map((image) => [image.appid, image]));
+        setMatches((current) => current.map((match) => {
+          const image = byAppid.get(match.appid);
+          return image ? { ...match, ...image } : match;
+        }));
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          // Image enrichment is best-effort and must never replace textual search results.
+        }
+      }
+    })();
+    return () => nextController.abort();
+  }, [matches]);
+
   function updateQuery(value: string) {
     setQuery(value);
+    enrichmentController.current?.abort();
+    enrichmentSequence.current += 1;
     if (value.trim().length >= 2) return;
     controller.current?.abort();
     requestSequence.current += 1;
@@ -271,9 +344,7 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
                 onClick={() => void selectMatch(match)}
                 className={`flex min-h-[76px] w-full items-center gap-3 rounded-xl border p-2.5 text-left transition-[background-color,border-color,transform] hover:-translate-y-px ${preview?.appid === match.appid || index === activeIndex ? "border-primary/50 bg-primary/5" : "border-border hover:bg-accent"}`}
               >
-                {match.headerImage ? (
-                  <Image src={match.headerImage} alt="" width={184} height={86} loading="lazy" className="h-12 w-[92px] shrink-0 rounded-lg object-cover" />
-                ) : <span className="grid h-12 w-[92px] shrink-0 place-items-center rounded-lg bg-secondary"><PackageSearch className="size-5" /></span>}
+                <ResultImage match={match} />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold leading-5"><HighlightedName name={match.name} query={query} /></span>
                   <span className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-muted-foreground">

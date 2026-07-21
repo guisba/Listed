@@ -14,6 +14,7 @@ const providerGame = {
   type: "game",
   storeUrl: "https://store.steampowered.com/app/999001/",
   headerImage: null,
+  capsuleImage: null,
   coverImage: null,
   shortDescription: "Real provider fixture.",
   fullDescription: null,
@@ -28,6 +29,7 @@ const providerGame = {
   supportedLanguages: [],
   price: null,
   isFree: false,
+  recommendationsTotal: null,
   metadataStatus: "complete" as const,
 };
 

@@ -3,12 +3,14 @@ import "server-only";
 import { normalizeSteamFeatures } from "./features";
 import { stripExternalHtml } from "./input";
 import { SteamError, toSteamError } from "./errors";
+import { safeSteamImageUrl } from "./image";
 import type { SteamGame, SteamPrice, SteamProvider } from "./types";
 
 interface StoreData {
   type?: string;
   name?: string;
   header_image?: string;
+  capsule_image?: string;
   capsule_imagev5?: string;
   short_description?: string;
   detailed_description?: string;
@@ -27,6 +29,7 @@ interface StoreData {
     final_formatted?: string;
   };
   release_date?: { coming_soon?: boolean; date?: string };
+  recommendations?: { total?: number };
 }
 
 interface StoreResponse { success: boolean; data?: StoreData }
@@ -99,15 +102,20 @@ export class SteamStoreProvider implements SteamProvider {
     const categoryNames = (data.categories ?? []).map((category) => category.description).filter(Boolean);
     const shortDescription = stripExternalHtml(data.short_description)?.slice(0, 2_000) ?? null;
     const fullDescription = stripExternalHtml(data.detailed_description);
-    const enoughMetadata = Boolean(data.header_image && shortDescription && Object.keys(platforms).length);
+    const headerImage = safeSteamImageUrl(data.header_image);
+    const capsuleImage = safeSteamImageUrl(data.capsule_imagev5)
+      ?? safeSteamImageUrl(data.capsule_image)
+      ?? headerImage;
+    const enoughMetadata = Boolean(headerImage && shortDescription && Object.keys(platforms).length);
 
     return {
       appid,
       name,
       type: data.type ?? "game",
       storeUrl: `https://store.steampowered.com/app/${appid}/`,
-      headerImage: data.header_image ?? null,
-      coverImage: data.capsule_imagev5 ?? data.header_image ?? null,
+      headerImage,
+      capsuleImage,
+      coverImage: capsuleImage,
       shortDescription,
       fullDescription,
       releaseDate: data.release_date?.date ?? null,
@@ -123,6 +131,9 @@ export class SteamStoreProvider implements SteamProvider {
       supportedLanguages: normalizeLanguages(data.supported_languages),
       price: normalizePrice(data),
       isFree: Boolean(data.is_free),
+      recommendationsTotal: typeof data.recommendations?.total === "number" && data.recommendations.total >= 0
+        ? Math.trunc(data.recommendations.total)
+        : null,
       metadataStatus: enoughMetadata ? "complete" : "partial",
     };
   }

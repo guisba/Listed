@@ -38,6 +38,10 @@
 - O endpoint `appdetails` da Store é instável e só pode ser usado atrás de `STEAM_PROVIDER_ENABLED`.
 - Toda chamada é server-side, com timeout, cache/fallback e sanitização.
 - Autocomplete pesquisa somente `steam_app_index`; nunca chame a Steam a cada tecla.
+- Imagens de resultados usam duas fases: resposta textual primeiro e enriquecimento server-only de no máximo 12 AppIDs, concorrência 3. Nunca baixe detalhes para o catálogo inteiro.
+- URLs de imagem aceitas são HTTPS no allowlist de `lib/steam/image.ts`; mantenha `next.config.ts` alinhado aos hosts realmente observados.
+- Ranking é relevância textual + tipo + popularidade limitada a 250. Popularidade só desempata matches próximos; nunca use AppID, timestamp ou ordem do provider como proxy.
+- Sinais detalhados de popularidade ficam em `private.steam_app_popularity`; a API pública retorna apenas o resultado ordenado, não contagens internas.
 - Sync exige `CRON_SECRET`, checkpoint por página e escrita com `SUPABASE_SECRET_KEY`.
 - O catálogo oficial usa paginação `last_appid`, lease e checkpoint depois de cada upsert. Nunca logue URL autenticada ou payload completo.
 - Preserve os casos de fumaça Terraria/105600 e Counter-Strike 2/730 nos testes.

@@ -19,7 +19,9 @@ describe("SteamStoreProvider", () => {
         data: {
           type: "game",
           name: "Terraria",
-          header_image: "https://cdn.akamai.steamstatic.com/terraria.jpg",
+          header_image: "https://shared.akamai.steamstatic.com/terraria.jpg",
+          capsule_imagev5: "https://shared.akamai.steamstatic.com/terraria-capsule.jpg",
+          recommendations: { total: 125000 },
           short_description: "<b>Dig, fight &amp; explore.</b>",
           detailed_description: "<p>Sem <script>alert(1)</script> marcação.</p>",
           is_free: false,
@@ -37,7 +39,7 @@ describe("SteamStoreProvider", () => {
     const { SteamStoreProvider } = await import("@/lib/steam/store-provider");
     const game = await new SteamStoreProvider(fetcher, 1_000, 1).getApp(105600);
 
-    expect(game).toMatchObject({ name: "Terraria", metadataStatus: "complete", developers: ["Re-Logic"], price: { currency: "BRL", final: 3299 } });
+    expect(game).toMatchObject({ name: "Terraria", metadataStatus: "complete", developers: ["Re-Logic"], recommendationsTotal: 125000, capsuleImage: expect.stringContaining("terraria-capsule") });
     expect(game?.shortDescription).toBe("Dig, fight & explore.");
     expect(game?.fullDescription).not.toContain("<script>");
     expect(game?.features).toEqual(expect.arrayContaining(["coop-online", "multiplayer", "windows", "macos", "linux"]));

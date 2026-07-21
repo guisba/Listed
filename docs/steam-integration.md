@@ -28,6 +28,14 @@ Estados: `pending`, `complete`, `partial`, `failed`, `stale`. Metadados completo
 
 `SUPABASE_SECRET_KEY` é necessária para persistir detalhes. Sem ela, o provider ainda pode devolver uma prévia, mas o resultado fica `uncached`; esse modo é apenas degradado e deve ser corrigido no ambiente.
 
+### Imagens em duas fases
+
+`IStoreService/GetAppList` não fornece cápsulas. A busca inicial junta `steam_app_index` com o cache já hidratado e retorna `capsuleImageUrl` quando disponível, além de `imageStatus`. Em seguida, o cliente envia somente os AppIDs visíveis sem imagem para `POST /api/steam/search/enrich`. O endpoint exige usuário autenticado, aceita 1–12 inteiros positivos, limita requisições e concorrência a 3, consulta o cache antes do provider e isola falhas por item.
+
+O provider prioriza `capsule_imagev5`, depois `capsule_image` e por fim `header_image`. As URLs são persistidas no índice com estados `unknown`, `available`, `missing`, `failed` ou `stale`; ausência tem TTL de sete dias e falha transitória, 30 minutos. A UI reserva 104×39 px no mobile e 120×45 px a partir de `sm`, usa skeleton sem anúncio, `object-fit: cover`, lazy loading, transição apenas com movimento permitido e placeholder estável em falha.
+
+Somente `https://shared.akamai.steamstatic.com` foi observado nos dados reais e está autorizado tanto pelo validador quanto por `next/image`. URLs HTTP, com credenciais, malformadas ou de outros hosts são descartadas. Para depurar, compare `capsule_image_url`, `image_status` e `image_updated_at` no índice, a resposta pública da busca, o POST de enriquecimento e a requisição `/_next/image` no Network.
+
 ## Catálogo completo e incremental
 
 `GET|POST /api/steam/sync?mode=auto` exige `Authorization: Bearer $CRON_SECRET`, `STEAM_CATALOG_SYNC_ENABLED=true`, `STEAM_WEB_API_KEY` e `SUPABASE_SECRET_KEY`. O segredo nunca é aceito por query string. `auto` continua o bootstrap enquanto o catálogo estiver parcial e passa a incremental após a conclusão. `mode=full`, `mode=incremental` e `pages=1..100` atendem operação manual e validação controlada.
@@ -40,7 +48,11 @@ Não existem jogos fixos no runtime ou no seed. Antes da conclusão, a busca usa
 
 ## Busca indexada
 
-`pg_trgm` e `unaccent` normalizam e indexam nomes, preservando Unicode e nomes compostos apenas por símbolos. A ordem é AppID exato, nome exato, prefixo, início de palavra, similaridade e contenção. AppID numérico usa um ramo BTREE separado; nomes usam BTREE para prefixos e GIN trigram, evitando que `appid::text` force varredura sequencial. A API devolve somente metadados públicos; checkpoints e erros operacionais ficam restritos ao endpoint administrativo.
+`pg_trgm` e `unaccent` normalizam e indexam nomes, preservando Unicode e nomes compostos apenas por símbolos. AppID numérico usa um ramo BTREE separado; nomes usam BTREE para prefixos e GIN trigram, evitando que `appid::text` force varredura sequencial. A API devolve somente metadados públicos; checkpoints e erros operacionais ficam restritos ao endpoint administrativo.
+
+A pontuação é explícita: AppID exato 2.000; nome exato 1.500; exato normalizado 1.450; prefixo 1.100–1.150; início de palavra 900–950; similaridade 450–700; contenção 200–400. Tipo `game` soma 150; demo/DLC/soundtrack/software/tool recebem penalidades. Popularidade agrega sessões/grupos distintos e votos do Listed, além de recomendações oficiais somente quando o detalhe já foi carregado; todos os sinais passam por `log1p` e o componente final é limitado a 250. Assim, popularidade desempata qualidade textual próxima sem ultrapassar um match claramente melhor.
+
+Sinais detalhados ficam em `private.steam_app_popularity`; somente `popularity_score` agregado é copiado ao índice. Triggers atualizam eventos internos. Recomendações são atualizadas junto com o cache de detalhes, com o mesmo TTL estável de sete dias. A pesquisa nunca espera imagens, jogadores atuais, recomendações ou chamadas externas.
 
 ## Operação
 

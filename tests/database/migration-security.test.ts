@@ -7,6 +7,8 @@ const steamMigration = readFileSync(join(process.cwd(), "supabase", "migrations"
 const fullCatalogMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260721122538_steam_catalog_full_search.sql"), "utf8");
 const presetRemovalMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260721124406_remove_steam_runtime_presets.sql"), "utf8");
 const legacyBootstrapMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260721144016_add_legacy_public_applist_bootstrap.sql"), "utf8");
+const imageRankingMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260721180000_steam_search_images_popularity.sql"), "utf8");
+const recommendationMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260721181000_steam_recommendations_popularity.sql"), "utf8");
 const seed = readFileSync(join(process.cwd(), "supabase", "seed.sql"), "utf8");
 const exposedTables = ["profiles", "groups", "group_members", "sessions", "session_members", "session_invites", "catalog_games", "steam_app_index", "session_games", "votes", "game_ownership", "user_game_library", "decision_runs", "decision_results", "audit_logs"];
 
@@ -42,5 +44,14 @@ describe("database security migration", () => {
     expect(seed).not.toMatch(/Counter-Strike|Terraria|Left 4 Dead|Stardew Valley|Deep Rock/i);
     expect(presetRemovalMigration).toContain("delete from public.catalog_games");
     expect(presetRemovalMigration).toContain("metadata_updated_at is null");
+  });
+  it("mantém sinais detalhados de popularidade privados e imagens limitadas", () => {
+    expect(imageRankingMigration).toContain("private.steam_app_popularity");
+    expect(imageRankingMigration).toContain("revoke all on table private.steam_app_popularity from public, anon, authenticated");
+    expect(imageRankingMigration).toContain("popularity_score between 0 and 250");
+    expect(imageRankingMigration).toContain("steam_app_index_image_refresh_idx");
+    expect(recommendationMigration).toContain("security invoker");
+    expect(recommendationMigration).toContain("grant execute on function public.record_steam_recommendations(bigint, bigint) to service_role");
+    expect(recommendationMigration).toMatch(/revoke all on function public\.record_steam_recommendations[\s\S]+from public, anon, authenticated/);
   });
 });

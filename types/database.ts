@@ -630,13 +630,20 @@ export type Database = {
           appid: number
           catalog_source: string | null
           catalog_type: string
+          capsule_image_url: string | null
           created_at: string
+          header_image_url: string | null
+          image_source: string | null
+          image_status: string
+          image_updated_at: string | null
           indexed_at: string
           is_available: boolean
           last_modified: number | null
           last_seen_generation: string | null
           name: string
           normalized_name: string
+          popularity_score: number
+          popularity_updated_at: string | null
           price_change_number: number | null
           source: string
           synced_at: string
@@ -647,13 +654,20 @@ export type Database = {
           appid: number
           catalog_source?: string | null
           catalog_type?: string
+          capsule_image_url?: string | null
           created_at?: string
+          header_image_url?: string | null
+          image_source?: string | null
+          image_status?: string
+          image_updated_at?: string | null
           indexed_at?: string
           is_available?: boolean
           last_modified?: number | null
           last_seen_generation?: string | null
           name: string
           normalized_name: string
+          popularity_score?: number
+          popularity_updated_at?: string | null
           price_change_number?: number | null
           source?: string
           synced_at?: string
@@ -664,13 +678,20 @@ export type Database = {
           appid?: number
           catalog_source?: string | null
           catalog_type?: string
+          capsule_image_url?: string | null
           created_at?: string
+          header_image_url?: string | null
+          image_source?: string | null
+          image_status?: string
+          image_updated_at?: string | null
           indexed_at?: string
           is_available?: boolean
           last_modified?: number | null
           last_seen_generation?: string | null
           name?: string
           normalized_name?: string
+          popularity_score?: number
+          popularity_updated_at?: string | null
           price_change_number?: number | null
           source?: string
           synced_at?: string
@@ -1051,18 +1072,28 @@ export type Database = {
           app_type: string
           appid: number
           cache_expires_at: string
+          capsule_image_url: string
           catalog_game_id: string
           catalog_source: string
-          header_image: string
+          final_score: number
+          header_image_url: string
+          image_status: string
+          match_kind: string
           metadata_status: Database["public"]["Enums"]["metadata_status"]
           name: string
           platforms: string[]
           release_date: string
-          relevance: number
+          popularity_score: number
+          text_relevance_score: number
           total_matches: number
+          type_score: number
         }[]
       }
       normalize_steam_name: { Args: { value: string }; Returns: string }
+      record_steam_recommendations: {
+        Args: { recommendations_total: number; target_appid: number }
+        Returns: undefined
+      }
       pause_legacy_public_applist: {
         Args: { p_claim_token: string }
         Returns: boolean

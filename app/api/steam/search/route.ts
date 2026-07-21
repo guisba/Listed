@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { parseSteamInput } from "@/lib/steam/input";
 import { resolveSteamGame } from "@/lib/steam/cache";
 import { SteamError } from "@/lib/steam/errors";
+import { safeSteamImageUrl, type SteamImageStatus } from "@/lib/steam/image";
 import { consumeSteamRateLimit } from "@/lib/steam/rate-limit";
 import { getSteamCatalogStatus } from "@/lib/steam/catalog-sync";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -65,12 +66,17 @@ export async function GET(request: NextRequest) {
       name: String(row.name),
       type: String(row.app_type ?? "game"),
       id: typeof row.catalog_game_id === "string" ? row.catalog_game_id : null,
-      headerImage: typeof row.header_image === "string" ? row.header_image : null,
+      capsuleImageUrl: safeSteamImageUrl(row.capsule_image_url),
+      headerImage: safeSteamImageUrl(row.header_image_url),
+      imageStatus: (["unknown", "available", "missing", "failed", "stale"] as SteamImageStatus[]).includes(row.image_status as SteamImageStatus)
+        ? row.image_status as SteamImageStatus
+        : "unknown",
       releaseDate: typeof row.release_date === "string" ? row.release_date : null,
       platforms: Array.isArray(row.platforms) ? row.platforms.filter((value): value is string => typeof value === "string") : [],
       metadataStatus: row.metadata_status ?? null,
       cacheExpiresAt: row.cache_expires_at ?? null,
-      relevance: Number(row.relevance ?? 0),
+      relevance: Number(row.text_relevance_score ?? 0),
+      matchKind: typeof row.match_kind === "string" ? row.match_kind : undefined,
       source: typeof row.catalog_source === "string" ? row.catalog_source : "individual_lookup",
     }));
     const total = Number((data?.[0] as Record<string, unknown> | undefined)?.total_matches ?? games.length);

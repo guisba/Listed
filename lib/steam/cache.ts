@@ -25,6 +25,7 @@ export function catalogRowToPreview(row: CatalogRow, cacheState: SteamGamePrevie
     type: typeof row.app_type === "string" ? row.app_type : "game",
     storeUrl: typeof row.store_url === "string" ? row.store_url : `https://store.steampowered.com/app/${row.steam_appid}/`,
     headerImage: typeof row.header_image === "string" ? row.header_image : null,
+    capsuleImage: typeof row.cover_image === "string" ? row.cover_image : typeof row.header_image === "string" ? row.header_image : null,
     coverImage: typeof row.cover_image === "string" ? row.cover_image : null,
     shortDescription: typeof row.short_description === "string" ? row.short_description : null,
     fullDescription: typeof row.full_description === "string" ? row.full_description : null,
@@ -39,6 +40,9 @@ export function catalogRowToPreview(row: CatalogRow, cacheState: SteamGamePrevie
     supportedLanguages: textArray(row.supported_languages),
     price: row.price && typeof row.price === "object" ? row.price as SteamGame["price"] : null,
     isFree: Boolean(row.is_free),
+    recommendationsTotal: typeof (row.raw_metadata as Record<string, unknown> | null)?.recommendationsTotal === "number"
+      ? Number((row.raw_metadata as Record<string, unknown>).recommendationsTotal)
+      : null,
     metadataStatus: ["pending", "complete", "partial", "failed", "stale"].includes(String(row.metadata_status))
       ? row.metadata_status as SteamGame["metadataStatus"]
       : "partial",
@@ -98,11 +102,23 @@ async function persistSteamGame(game: SteamGame) {
     catalog_type: game.type,
     source: "individual_lookup",
     is_available: true,
+    capsule_image_url: game.capsuleImage,
+    header_image_url: game.headerImage,
+    image_source: game.capsuleImage || game.headerImage ? "individual_lookup" : null,
+    image_status: game.capsuleImage || game.headerImage ? "available" : "missing",
+    image_updated_at: now.toISOString(),
     synced_at: now.toISOString(),
     updated_at: now.toISOString(),
     indexed_at: now.toISOString(),
   }, { onConflict: "appid" });
   if (indexError) throw new SteamError("cache_unavailable", 503, { cause: indexError });
+
+  if (game.recommendationsTotal !== null) {
+    await admin.rpc("record_steam_recommendations", {
+      target_appid: game.appid,
+      recommendations_total: game.recommendationsTotal,
+    });
+  }
 
   // Individual AppID/link hydration happens outside the catalog synchronizer,
   // so keep its diagnostic total aligned with the searchable index as well.

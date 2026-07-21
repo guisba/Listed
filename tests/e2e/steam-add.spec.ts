@@ -111,3 +111,57 @@ test("popup Steam amplo adapta resultados e prévia em seis larguras e três tem
     await expect(dialog).toBeHidden();
   }
 });
+
+test("resultados textuais recebem cápsulas e ignoram enriquecimento atrasado", async ({ page }) => {
+  await page.route("**/api/steam/search?**", async (route) => {
+    const query = new URL(route.request().url()).searchParams.get("q")?.toLowerCase();
+    const game = query === "portal"
+      ? { appid: 400, name: "Portal" }
+      : { appid: 1145360, name: "Hades" };
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        kind: "matches",
+        catalog: { status: "complete", indexedGames: 175476, lastSyncAt: null },
+        pagination: { limit: 12, offset: 0, total: 1, hasMore: false },
+        games: [{ ...game, type: "game", id: null, headerImage: null, capsuleImageUrl: null, imageStatus: "unknown", releaseDate: null, platforms: [], relevance: 1500 }],
+      }),
+    });
+  });
+  await page.route("**/api/steam/search/enrich", async (route) => {
+    const { appids } = route.request().postDataJSON() as { appids: number[] };
+    if (appids.includes(400)) await new Promise((resolve) => setTimeout(resolve, 500));
+    const appid = appids[0];
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ images: [{
+        appid,
+        capsuleImageUrl: `https://shared.akamai.steamstatic.com/${appid}.jpg`,
+        imageStatus: "available",
+      }] }),
+    });
+  });
+  await page.route("**/_next/image?**", (route) => route.fulfill({
+    status: 200,
+    contentType: "image/png",
+    body: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64"),
+  }));
+
+  await page.goto("/create");
+  await page.getByLabel("Nome da lista").fill(`Steam images ${Date.now()}`);
+  await page.getByLabel("Como devemos chamar você?").fill("Images E2E");
+  await page.getByRole("button", { name: /Criar lista/i }).click();
+  await expect(page).toHaveURL(/\/s\/[A-Z0-9]+/, { timeout: 20_000 });
+  await page.getByRole("button", { name: /Adicionar jogo/i }).click();
+  const input = page.getByRole("combobox", { name: "Buscar jogo na Steam" });
+  await input.fill("portal");
+  await expect(page.getByRole("option", { name: /Portal/ })).toBeVisible();
+  await input.fill("hades");
+  await expect(page.getByRole("option", { name: /Hades/ })).toBeVisible();
+  await expect(page.getByAltText("Cápsula de Hades")).toBeVisible();
+  await page.waitForTimeout(600);
+  await expect(page.getByRole("option", { name: /Portal/ })).toHaveCount(0);
+  await expect(page.getByAltText("Cápsula de Hades")).toBeVisible();
+});

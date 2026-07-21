@@ -81,6 +81,8 @@ npm run steam:catalog:status
 
 O provider oficial chama `GET https://api.steampowered.com/IStoreService/GetAppList/v1/` com `input_json` codificado e a Web API key apenas no servidor. Bootstrap e incremental usam lotes retomáveis, lease e checkpoint no Supabase. A busca live consulta somente o índice local; a seleção continua carregando detalhes sob demanda por AppID.
 
+Resultados são entregues em duas fases: texto e imagens já armazenadas chegam na busca inicial; somente as cápsulas visíveis ausentes são enriquecidas por `POST /api/steam/search/enrich`, em lote de até 12 e concorrência 3. O ranking combina relevância textual, tipo e popularidade limitada. Popularidade usa grupos/sessões e votos distintos do Listed e recomendações oficiais já obtidas no cache de detalhes; nunca bloqueia a pesquisa.
+
 ## Qualidade
 
 ```bash

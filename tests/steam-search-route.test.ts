@@ -22,10 +22,21 @@ describe("GET /api/steam/search", () => {
   });
 
   it("consulta o índice local por nome", async () => {
-    rpc.mockResolvedValue({ data: [{ appid: 105600, name: "Terraria", app_type: "game", catalog_source: "official_store_service", catalog_game_id: null }], error: null });
+    rpc.mockResolvedValue({ data: [{
+      appid: 105600,
+      name: "Terraria",
+      app_type: "game",
+      catalog_source: "official_store_service",
+      catalog_game_id: null,
+      capsule_image_url: "https://shared.akamai.steamstatic.com/terraria.jpg",
+      header_image_url: "https://evil.example/header.jpg",
+      image_status: "available",
+      match_kind: "exact",
+      text_relevance_score: 1500,
+    }], error: null });
     const response = await GET(new NextRequest("http://localhost/api/steam/search?q=Terraria"));
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({ kind: "matches", source: "index", catalog: { provider: "official_store_service" }, games: [{ appid: 105600, name: "Terraria", source: "official_store_service" }] });
+    await expect(response.json()).resolves.toMatchObject({ kind: "matches", source: "index", catalog: { provider: "official_store_service" }, games: [{ appid: 105600, name: "Terraria", source: "official_store_service", capsuleImageUrl: expect.stringContaining("steamstatic.com"), headerImage: null, imageStatus: "available", relevance: 1500, matchKind: "exact" }] });
     expect(rpc).toHaveBeenCalledWith("search_steam_apps", { search_query: "Terraria", result_limit: 12, result_offset: 0 });
   });
 
