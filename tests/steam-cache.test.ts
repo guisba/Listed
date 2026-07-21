@@ -33,16 +33,22 @@ const providerGame = {
 
 describe("resolveSteamGame", () => {
   const indexUpsert = vi.fn(async () => ({ error: null }));
+  const stateUpdate = vi.fn(() => ({ eq: vi.fn(async () => ({ error: null })) }));
 
   beforeEach(() => {
     vi.clearAllMocks();
     const admin = {
-      from: vi.fn((table: string) => table === "catalog_games"
-        ? {
+      from: vi.fn((table: string) => {
+        if (table === "catalog_games") return {
             upsert: vi.fn(() => ({ select: vi.fn(() => ({ single: vi.fn(async () => ({ data: { id: "catalog-id" }, error: null })) })) })),
             update: vi.fn(() => ({ eq: vi.fn(async () => ({ error: null })) })),
-          }
-        : { upsert: indexUpsert }),
+          };
+        if (table === "steam_app_index") return {
+          upsert: indexUpsert,
+          select: vi.fn(() => ({ eq: vi.fn(async () => ({ count: 5, error: null })) })),
+        };
+        return { update: stateUpdate };
+      }),
     };
     vi.mocked(getSupabaseAdmin).mockReturnValue(admin as never);
   });
@@ -56,6 +62,7 @@ describe("resolveSteamGame", () => {
 
     expect(result).toMatchObject({ appid: providerGame.appid, cacheState: "uncached" });
     expect(indexUpsert).toHaveBeenCalledWith(expect.objectContaining({ appid: providerGame.appid, source: "individual_lookup", is_available: true }), { onConflict: "appid" });
+    expect(stateUpdate).toHaveBeenCalledWith(expect.objectContaining({ total_indexed: 5 }));
   });
 
   it("retorna erro específico quando o AppID não representa um jogo", async () => {

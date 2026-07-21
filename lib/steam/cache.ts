@@ -90,7 +90,7 @@ async function persistSteamGame(game: SteamGame) {
     .single();
   if (error) throw new SteamError("cache_unavailable", 503, { cause: error });
 
-  await admin.from("steam_app_index").upsert({
+  const { error: indexError } = await admin.from("steam_app_index").upsert({
     appid: game.appid,
     name: game.name,
     normalized_name: normalizeName(game.name),
@@ -102,6 +102,20 @@ async function persistSteamGame(game: SteamGame) {
     updated_at: now.toISOString(),
     indexed_at: now.toISOString(),
   }, { onConflict: "appid" });
+  if (indexError) throw new SteamError("cache_unavailable", 503, { cause: indexError });
+
+  // Individual AppID/link hydration happens outside the catalog synchronizer,
+  // so keep its diagnostic total aligned with the searchable index as well.
+  const { count: indexedGames, error: countError } = await admin
+    .from("steam_app_index")
+    .select("appid", { count: "exact", head: true })
+    .eq("is_available", true);
+  if (!countError && indexedGames !== null) {
+    await admin
+      .from("steam_catalog_sync_state")
+      .update({ total_indexed: indexedGames, updated_at: now.toISOString() })
+      .eq("singleton", true);
+  }
   return data?.id as string | null;
 }
 
