@@ -29,14 +29,9 @@ Estados: `pending`, `complete`, `partial`, `failed`, `stale`. Metadados completo
 
 ## Catálogo incremental
 
-`GET|POST /api/steam/sync?pages=5` exige `Authorization: Bearer $CRON_SECRET`, `STEAM_CATALOG_SYNC_ENABLED=true`, `STEAM_WEB_API_KEY` e `SUPABASE_SECRET_KEY`. Cada chamada processa de uma a cinco páginas de mil apps, faz upsert em lotes concorrentes de 250 e persiste o checkpoint após cada página.
+`GET|POST /api/steam/sync?pages=5` exige `Authorization: Bearer $CRON_SECRET`, `STEAM_CATALOG_SYNC_ENABLED=true`, `STEAM_WEB_API_KEY` e `SUPABASE_SECRET_KEY`. O segredo nunca é aceito por query string. Cada chamada processa de uma a cinco páginas de mil apps, tem timeout de plataforma, faz upsert em lotes concorrentes de 250 e persiste o checkpoint após cada página. Repetir uma página é seguro porque o upsert usa `appid` como chave de conflito.
 
-`steam_catalog_sync_state` mantém `last_appid`, `if_modified_since`, status, contagem e último erro. `steam_catalog_sync_runs` registra início/fim, origem, páginas, apps e erros. Ambas têm RLS e nenhum grant para clientes. O cron Vercel chama cinco páginas por dia; uma execução manual equivalente é:
-
-```bash
-curl -H "Authorization: Bearer $CRON_SECRET" \
-  "https://<preview>/api/steam/sync?pages=5"
-```
+`steam_catalog_sync_state` mantém `last_appid`, `if_modified_since`, status, contagem e último erro. `steam_catalog_sync_runs` registra início/fim, origem, páginas, apps e erros. Ambas têm RLS e nenhum grant para clientes. O cron Vercel chama cinco páginas por dia. Na validação, execute primeiro `pages=1` e somente depois `pages=5`, enviando o segredo por header sem registrá-lo no shell ou em logs.
 
 O bootstrap da migration inclui AppIDs 730 e 105600 para os smoke tests antes do primeiro sync amplo.
 

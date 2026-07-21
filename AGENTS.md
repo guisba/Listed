@@ -25,6 +25,9 @@
 - Nunca exponha `SUPABASE_SECRET_KEY`; código admin fica em `lib/supabase/admin.ts` e server-only.
 - Crie a migration com CLI, aplique uma vez, gere os tipos e rode advisors.
 - Funções `SECURITY DEFINER` exigem `auth.uid()`, `search_path` fixo, revoke de `public`/`anon` e testes de privilégio.
+- Variáveis públicas são `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` e `NEXT_PUBLIC_APP_URL`.
+- Variáveis secretas são `SUPABASE_SECRET_KEY`, `STEAM_WEB_API_KEY` e `CRON_SECRET`; nenhuma pode ser importada por Client Components ou aparecer em respostas/logs.
+- Em Preview, URLs absolutas devem preferir `VERCEL_URL`; `NEXT_PUBLIC_APP_URL` é a URL canônica de Production e o fallback local/estável.
 
 ## Steam
 

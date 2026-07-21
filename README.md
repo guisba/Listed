@@ -37,18 +37,26 @@ Abra `http://localhost:3000`. O comando `npm run dev` inicia a variante compatí
 
 ## Ambiente
 
+### Públicas
+
 | Variável | Escopo | Obrigatória | Uso |
 | --- | --- | --- | --- |
 | `NEXT_PUBLIC_APP_URL` | público | sim | URL canônica |
 | `NEXT_PUBLIC_SUPABASE_URL` | público | sim | endpoint Supabase |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | público | sim | chave moderna de baixo privilégio |
-| `SUPABASE_SECRET_KEY` | server-only | cron/admin | nunca vai ao browser |
-| `STEAM_WEB_API_KEY` | server-only | sync Steam | `IStoreService/GetAppList/v1` |
-| `CRON_SECRET` | server-only | cron | autentica limpeza e sync Steam |
-| `STEAM_PROVIDER_ENABLED` | server-only | não | habilita detalhes instáveis da loja |
-| `STEAM_CATALOG_SYNC_ENABLED` | server-only | não | habilita o job oficial incremental |
-| `STEAM_COMMUNITY_TAGS_ENABLED` | server-only | não | permanece `false`; scraping é proibido |
-| `AI_RECOMMENDATIONS_ENABLED` | server-only | não | recomendações externas opcionais |
+
+### Secretas e server-only
+
+| Variável | Uso |
+| --- | --- |
+| `SUPABASE_SECRET_KEY` | cliente administrativo lazy; nunca vai ao browser |
+| `STEAM_WEB_API_KEY` | sincronização oficial via `IStoreService/GetAppList/v1` |
+| `CRON_SECRET` | autenticação Bearer dos endpoints cron |
+
+### Flags
+
+- `STEAM_PROVIDER_ENABLED`: habilita a consulta server-side de detalhes.
+- `STEAM_CATALOG_SYNC_ENABLED`: habilita o catálogo incremental protegido.
 
 Não comite `.env.local`. Variáveis `NEXT_PUBLIC_*` são incorporadas ao bundle; nenhuma chave privilegiada pode usar esse prefixo.
 
@@ -80,11 +88,13 @@ Os testes E2E instalam o navegador uma única vez com `npx playwright install ch
 
 ## Deploy
 
-1. Configure Development e Preview na Vercel com as variáveis públicas do projeto Supabase de desenvolvimento.
-2. Configure `SUPABASE_SECRET_KEY`, `CRON_SECRET` e `STEAM_WEB_API_KEY` somente no servidor; habilite os flags Steam no ambiente de Preview.
-3. Rode migrations e advisors.
-4. Faça push de uma branch e valide o Preview.
-5. Promova o mesmo artefato somente após smoke test.
+1. Configure Development, Preview e Production na Vercel com as variáveis públicas do projeto Supabase correspondente.
+2. Configure `SUPABASE_SECRET_KEY`, `CRON_SECRET` e `STEAM_WEB_API_KEY` somente no servidor; use valores distintos de `CRON_SECRET` em Preview e Production.
+3. Defina as duas flags Steam em Preview e Production; isso não publica um deployment de produção.
+4. Defina `NEXT_PUBLIC_APP_URL` com a URL canônica apenas em Production. Em Preview, o servidor usa `VERCEL_URL` automaticamente.
+5. Rode migrations e advisors.
+6. Faça push de uma branch e valide o Preview.
+7. Promova o mesmo artefato somente após smoke test.
 
 O `vercel.json` usa `npm run build:vercel`. O comando `npm run build` produz o artefato Cloudflare Worker para Sites.
 
@@ -105,7 +115,7 @@ Consulte [identidade visual](docs/brand.md), [arquitetura](docs/architecture.md)
 
 ## Limitações conhecidas
 
-- Anonymous Sign-Ins precisa ser habilitado manualmente no Dashboard do Supabase.
+- Anonymous Sign-Ins deve permanecer habilitado no projeto Supabase usado pelo ambiente.
 - Google, Discord, magic link e account linking possuem interface; os providers exigem configuração no Supabase.
 - Detalhes de loja usam endpoint não documentado e permanecem atrás de feature flag.
 - O primeiro catálogo amplo exige `STEAM_WEB_API_KEY` e execução protegida de `/api/steam/sync`; sem isso, o bootstrap cobre apenas os casos de fumaça Terraria e Counter-Strike 2.

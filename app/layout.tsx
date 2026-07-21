@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/theme-provider";
+import { getAppUrl } from "@/lib/env";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
+  metadataBase: getAppUrl(),
   applicationName: "Listed",
   title: { default: "Listed — Decida o que jogar", template: "%s · Listed" },
   description: "Crie uma lista de jogos com seus amigos, importe informações da Steam, vote nas melhores opções e escolha o próximo jogo do grupo.",
