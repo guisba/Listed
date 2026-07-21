@@ -12,7 +12,7 @@ async function main() {
   const [{ data: state, error: stateError }, { count, error: countError }] = await Promise.all([
     admin
       .from("steam_catalog_sync_state")
-      .select("status,provider,last_completed_at,total_indexed,legacy_total_received,legacy_total_persisted,legacy_total_failed,legacy_last_batch,legacy_batch_size,last_error")
+      .select("status,provider,last_completed_at,total_indexed,catalog_complete,last_appid_checkpoint,last_page_size,last_error")
       .eq("singleton", true)
       .single(),
     admin.from("steam_app_index").select("appid", { count: "exact", head: true }).eq("is_available", true),
@@ -25,11 +25,9 @@ async function main() {
     status: state.status,
     hasError: Boolean(state.last_error),
     progress: {
-      received: state.legacy_total_received,
-      persisted: state.legacy_total_persisted,
-      failed: state.legacy_total_failed,
-      lastBatch: state.legacy_last_batch,
-      batchSize: state.legacy_batch_size,
+      complete: state.catalog_complete,
+      checkpoint: state.last_appid_checkpoint,
+      lastPageSize: state.last_page_size,
     },
   })}\n`);
 }

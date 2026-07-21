@@ -18,7 +18,6 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "steam:catalog:status": "node --env-file-if-exists=.env.local --import tsx scripts/steam-catalog-status.ts",
-    "steam:catalog:bootstrap-legacy": "node --env-file-if-exists=.env.local --import tsx scripts/steam-catalog-bootstrap.ts",
     "db:new": "supabase migration new",
     "db:test": "vitest run tests/database"
   },

@@ -8,7 +8,7 @@
 
 O MVP inclui landing page, criação e entrada em sessões temporárias, identidade anônima Supabase, código curto, sala em tempo real, jogos manuais, seletor Steam com autocomplete local e prévia server-side, votos, propriedade, filtros, sorteio simples ou ponderado, administração básica, três temas e persistência PostgreSQL com RLS.
 
-Grupos permanentes, OAuth, upgrade de conta e modos avançados já têm fundação no schema, mas continuam no roadmap. O catálogo Steam possui sync incremental oficial e um bootstrap administrativo legado temporário; nenhum deles roda durante a pesquisa do usuário.
+Grupos permanentes, OAuth, upgrade de conta e modos avançados já têm fundação no schema, mas continuam no roadmap. O catálogo Steam possui bootstrap e sync incremental oficiais; nenhum sync roda durante a pesquisa do usuário.
 
 ## Stack
 
@@ -77,13 +77,9 @@ O projeto usa publishable keys atuais e grants explícitos, necessários para no
 
 ```bash
 npm run steam:catalog:status
-npm run steam:catalog:bootstrap-legacy -- --dry-run
-npm run steam:catalog:bootstrap-legacy
 ```
 
-O bootstrap usa exclusivamente `GET https://api.steampowered.com/ISteamApps/GetAppList/v2/`, sem chave ou parâmetros, para importar somente `appid + name` em lotes de 1.000. A seleção continua carregando detalhes por AppID. O comando valida tipo, tamanho e estrutura antes de escrever; um 404, HTML ou JSON inesperado encerra com código diferente de zero e não altera o índice.
-
-Para execução remota, dispare manualmente o workflow **Steam catalog bootstrap (legacy public AppList)**. Ele requer os GitHub Actions Secrets `SUPABASE_URL` e `SUPABASE_SECRET_KEY`, impede concorrência e não publica deployment nem artifact do catálogo.
+O provider oficial chama `GET https://api.steampowered.com/IStoreService/GetAppList/v1/` com `input_json` codificado e a Web API key apenas no servidor. Bootstrap e incremental usam lotes retomáveis, lease e checkpoint no Supabase. A busca live consulta somente o índice local; a seleção continua carregando detalhes sob demanda por AppID.
 
 ## Qualidade
 
@@ -130,7 +126,7 @@ Consulte [identidade visual](docs/brand.md), [arquitetura](docs/architecture.md)
 - Anonymous Sign-Ins deve permanecer habilitado no projeto Supabase usado pelo ambiente.
 - Google, Discord, magic link e account linking possuem interface; os providers exigem configuração no Supabase.
 - Detalhes de loja usam endpoint não documentado e permanecem atrás de feature flag.
-- `IStoreService/GetAppList/v1` continua preferencial para atualização incremental, mas a chave atual é rejeitada com 403. O fallback legado é descontinuado pela Valve e, na validação de 21/07/2026, respondeu 404; até um provider entregar catálogo válido, o índice permanece explicitamente parcial e não apresenta presets como resultados reais.
+- O host público `api.steampowered.com` aceita Web API keys comuns; `partner.steam-api.com` exige Publisher Web API Key e não é usado pelo catálogo do Listed.
 - O E2E multicontexto depende de um ambiente Supabase de teste com autenticação anônima ativa.
 
 ## Roadmap

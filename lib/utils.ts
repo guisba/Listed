@@ -16,7 +16,7 @@ export function formatRelativeDate(value: string | Date) {
 }
 
 export function normalizeName(value: string) {
-  return value
+  const normalized = value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .normalize("NFC")
@@ -26,4 +26,5 @@ export function normalizeName(value: string) {
     .replace(/[^\p{L}\p{N}]+/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
+  return normalized || value.trim().toLocaleLowerCase("pt-BR");
 }
