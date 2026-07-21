@@ -1,0 +1,2 @@
+-- Intentionally empty. Runtime and local development use only real Steam data.
+-- Deterministic catalogs used by automated tests live under tests/fixtures.
