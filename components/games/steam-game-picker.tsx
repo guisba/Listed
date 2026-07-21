@@ -36,6 +36,7 @@ export function SteamGamePicker({ sessionId, onAdded, onManualFallback }: Props)
   const [status, setStatus] = useState<string | null>(null);
   const requestSequence = useRef(0);
   const controller = useRef<AbortController | null>(null);
+  const skipNextDebouncedSearch = useRef(false);
 
   const requestGames = useCallback(async (value: string, signal?: AbortSignal) => {
     const sequence = ++requestSequence.current;
@@ -72,6 +73,10 @@ export function SteamGamePicker({ sessionId, onAdded, onManualFallback }: Props)
     controller.current?.abort();
     const value = query.trim();
     if (value.length < 2) return;
+    if (skipNextDebouncedSearch.current) {
+      skipNextDebouncedSearch.current = false;
+      return;
+    }
     const nextController = new AbortController();
     controller.current = nextController;
     const timeout = window.setTimeout(() => requestGames(value, nextController.signal), 320);
@@ -94,6 +99,7 @@ export function SteamGamePicker({ sessionId, onAdded, onManualFallback }: Props)
 
   async function selectMatch(match: SteamSearchMatch) {
     controller.current?.abort();
+    skipNextDebouncedSearch.current = true;
     setQuery(match.name);
     setMatches([]);
     await requestGames(String(match.appid));

@@ -29,6 +29,9 @@ describe("SteamGamePicker", () => {
     expect(await screen.findByRole("option", { name: /Terraria/ })).toBeInTheDocument();
     fireEvent.keyDown(screen.getByRole("combobox"), { key: "Enter" });
     expect(await screen.findByRole("heading", { name: "Terraria" })).toBeInTheDocument();
+    await new Promise((resolve) => window.setTimeout(resolve, 400));
+    expect(screen.getByRole("heading", { name: "Terraria" })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
     fireEvent.click(screen.getByRole("button", { name: /Confirmar inclusão/ }));
     await waitFor(() => expect(onAdded).toHaveBeenCalled());
     expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/steam/session-game", expect.objectContaining({ method: "POST" }));
