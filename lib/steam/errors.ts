@@ -10,7 +10,7 @@ export type SteamErrorCode =
 
 const MESSAGES: Record<SteamErrorCode, string> = {
   invalid_input: "Informe um nome, AppID ou link oficial válido da Steam.",
-  not_found: "Esse jogo não foi encontrado na Steam.",
+  not_found: "Nenhum jogo da Steam foi encontrado para esse AppID.",
   provider_disabled: "A consulta de detalhes da Steam está temporariamente desativada. Você ainda pode incluir o jogo manualmente.",
   provider_timeout: "A Steam demorou para responder. Tente novamente em instantes ou use a inclusão manual.",
   provider_unavailable: "A Steam está indisponível no momento. Tente novamente em instantes ou use a inclusão manual.",

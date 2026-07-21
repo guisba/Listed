@@ -19,11 +19,11 @@ describe("SteamGamePicker", () => {
 
   it("busca ao digitar, permite teclado, mostra prévia e confirma", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(new Response(JSON.stringify({ kind: "matches", games: [{ appid: 105600, name: "Terraria", type: "game", id: null, headerImage: null }] }), { status: 200 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ kind: "matches", catalog: { status: "complete", indexedGames: 100000, lastSyncAt: null }, pagination: { hasMore: false }, games: [{ appid: 105600, name: "Terraria", type: "game", id: null, headerImage: null, releaseDate: "2011", platforms: ["windows"], relevance: 1 }] }), { status: 200 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ kind: "preview", games: [preview] }), { status: 200 }))
       .mockResolvedValueOnce(new Response(JSON.stringify({ game: preview }), { status: 201 }));
     const onAdded = vi.fn();
-    render(<SteamGamePicker sessionId="11111111-1111-4111-8111-111111111111" onAdded={onAdded} onManualFallback={vi.fn()} />);
+    render(<SteamGamePicker sessionId="11111111-1111-4111-8111-111111111111" onAdded={onAdded} onCancel={vi.fn()} onManualFallback={vi.fn()} />);
 
     fireEvent.change(screen.getByRole("combobox"), { target: { value: "Terraria" } });
     expect(await screen.findByRole("option", { name: /Terraria/ })).toBeInTheDocument();
@@ -32,7 +32,7 @@ describe("SteamGamePicker", () => {
     await new Promise((resolve) => window.setTimeout(resolve, 400));
     expect(screen.getByRole("heading", { name: "Terraria" })).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    fireEvent.click(screen.getByRole("button", { name: /Confirmar inclusão/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Adicionar à lista/ }));
     await waitFor(() => expect(onAdded).toHaveBeenCalled());
     expect(fetchMock).toHaveBeenNthCalledWith(3, "/api/steam/session-game", expect.objectContaining({ method: "POST" }));
   });

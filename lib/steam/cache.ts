@@ -95,6 +95,11 @@ async function persistSteamGame(game: SteamGame) {
     name: game.name,
     normalized_name: normalizeName(game.name),
     app_type: game.type,
+    catalog_type: game.type,
+    source: "individual_lookup",
+    is_available: true,
+    synced_at: now.toISOString(),
+    updated_at: now.toISOString(),
     indexed_at: now.toISOString(),
   }, { onConflict: "appid" });
   return data?.id as string | null;

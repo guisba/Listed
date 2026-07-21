@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Copy, Dices, ListChecks, Radio, Users } from "lucide-react";
@@ -9,10 +8,10 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const rankedGames = [
-  { name: "Deep Rock Galactic", detail: "Coop online · 4 pessoas", votes: 7, image: "https://cdn.akamai.steamstatic.com/steam/apps/548430/header.jpg", selected: true },
-  { name: "Overcooked! 2", detail: "Coop local · Controle", votes: 5, image: "https://cdn.akamai.steamstatic.com/steam/apps/728880/header.jpg", selected: false },
-  { name: "Lethal Company", detail: "Coop online · PC", votes: 4, image: "https://cdn.akamai.steamstatic.com/steam/apps/1966720/header.jpg", selected: false },
+const rankedSuggestions = [
+  { name: "Indicação do grupo", detail: "Coop online · 4 pessoas", votes: 7, selected: true },
+  { name: "Sugestão da rodada", detail: "Coop local · Controle", votes: 5, selected: false },
+  { name: "Escolha surpresa", detail: "Multiplayer · PC", votes: 4, selected: false },
 ];
 
 export function LandingPage() {
@@ -74,11 +73,11 @@ export function LandingPage() {
               </div>
 
               <ol aria-label="Jogos mais votados">
-                {rankedGames.map((game, index) => (
+                {rankedSuggestions.map((game, index) => (
                   <li key={game.name} className="selection-rail grid grid-cols-[2rem_4.5rem_1fr_auto] items-center gap-3 border-b border-border py-3 pl-4 pr-3 transition-colors hover:bg-secondary/35 sm:grid-cols-[2.5rem_6rem_1fr_auto] sm:gap-4 sm:pl-5 sm:pr-5" data-active={game.selected}>
                     <span className="font-mono text-xs font-semibold text-muted-foreground">0{index + 1}</span>
-                    <div className="relative aspect-[16/9] overflow-hidden rounded-md bg-secondary">
-                      <Image src={game.image} alt="" fill sizes="96px" className="object-cover" />
+                    <div aria-hidden="true" className="relative aspect-[16/9] overflow-hidden rounded-md bg-[linear-gradient(135deg,hsl(var(--primary)/.3),hsl(var(--secondary)),hsl(var(--primary)/.08))]">
+                      <span className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,hsl(var(--foreground)/.14),transparent_45%)]" />
                     </div>
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold sm:text-base">{game.name}</p>

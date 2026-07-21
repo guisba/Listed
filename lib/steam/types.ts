@@ -43,6 +43,9 @@ export interface SteamSearchMatch {
   type: string;
   id: string | null;
   headerImage: string | null;
+  releaseDate: string | null;
+  platforms: string[];
+  relevance: number;
   metadataStatus: SteamMetadataStatus | null;
   cacheExpiresAt: string | null;
 }

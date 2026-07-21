@@ -8,7 +8,7 @@
       "schedule": "17 4 * * *"
     },
     {
-      "path": "/api/steam/sync?pages=5",
+      "path": "/api/steam/sync?mode=auto",
       "schedule": "41 3 * * *"
     }
   ]

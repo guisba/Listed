@@ -62,17 +62,19 @@ export function AddGameDialog({ sessionId, userId, onAdded }: AddGameDialogProps
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild><Button><Plus className="size-4" /> Adicionar jogo</Button></DialogTrigger>
-      <DialogContent className="sm:w-[min(94vw,720px)]">
-        <p className="listed-eyebrow">Novo item</p>
-        <DialogTitle className="mt-2 text-2xl font-semibold tracking-[-.03em]">Adicionar à lista</DialogTitle>
-        <DialogDescription className="mt-2 text-sm text-muted-foreground">Encontre o jogo pelo nome, AppID ou link oficial e confirme os dados antes de incluir.</DialogDescription>
-        <div className="mt-5 grid grid-cols-2 gap-1 rounded-lg border border-border bg-secondary p-1" role="tablist" aria-label="Método de inclusão">
+      <DialogContent className="!inset-0 !h-[100dvh] !max-h-none !w-full !max-w-none !translate-x-0 !translate-y-0 !rounded-none !p-0 sm:!inset-auto sm:!left-1/2 sm:!top-1/2 sm:!h-[min(80vh,760px)] sm:!w-[min(960px,calc(100vw-48px))] sm:!-translate-x-1/2 sm:!-translate-y-1/2 sm:!rounded-2xl overflow-hidden flex flex-col">
+        <header className="shrink-0 border-b border-border px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
+          <p className="listed-eyebrow">Novo item</p>
+          <DialogTitle className="mt-2 text-2xl font-semibold tracking-[-.03em]">Adicionar à lista</DialogTitle>
+          <DialogDescription className="mt-2 pr-10 text-sm text-muted-foreground">Encontre o jogo pelo nome, AppID ou link oficial e confirme os dados antes de incluir.</DialogDescription>
+        <div className="mt-4 grid grid-cols-2 gap-1 rounded-lg border border-border bg-secondary p-1" role="tablist" aria-label="Método de inclusão">
           <button type="button" role="tab" aria-selected={mode === "steam"} onClick={() => setMode("steam")} className={`flex h-10 items-center justify-center gap-2 rounded-md text-sm font-semibold transition-colors ${mode === "steam" ? "bg-card text-foreground" : "text-muted-foreground"}`}><PackageSearch className="size-4" /> Steam</button>
           <button type="button" role="tab" aria-selected={mode === "manual"} onClick={() => setMode("manual")} className={`flex h-10 items-center justify-center gap-2 rounded-md text-sm font-semibold transition-colors ${mode === "manual" ? "bg-card text-foreground" : "text-muted-foreground"}`}><Gamepad2 className="size-4" /> Manual</button>
         </div>
+        </header>
 
-        {mode === "steam" ? <SteamGamePicker sessionId={sessionId} onAdded={finish} onManualFallback={() => setMode("manual")} /> : (
-          <form onSubmit={addManual} className="mt-5 grid gap-4 sm:grid-cols-2">
+        {mode === "steam" ? <SteamGamePicker sessionId={sessionId} onAdded={finish} onCancel={() => setOpen(false)} onManualFallback={() => setMode("manual")} /> : (
+          <form onSubmit={addManual} className="grid min-h-0 flex-1 gap-4 overflow-y-auto p-5 sm:grid-cols-2 sm:p-6">
             <label className="space-y-2 sm:col-span-2"><span className="text-sm font-semibold">Nome *</span><Input {...field("name")} placeholder="Minecraft, Valorant, jogo de tabuleiro…" required minLength={2} /></label>
             <label className="space-y-2"><span className="text-sm font-semibold">Plataforma</span><Input {...field("platform")} placeholder="PC, Xbox, PlayStation…" /></label>
             <label className="space-y-2"><span className="text-sm font-semibold">Modo</span><Input {...field("gameMode")} placeholder="Online, local, cooperativo…" /></label>

@@ -628,29 +628,50 @@ export type Database = {
         Row: {
           app_type: string
           appid: number
+          catalog_type: string
+          created_at: string
           indexed_at: string
+          is_available: boolean
           last_modified: number | null
+          last_seen_generation: string | null
           name: string
           normalized_name: string
           price_change_number: number | null
+          source: string
+          synced_at: string
+          updated_at: string
         }
         Insert: {
           app_type?: string
           appid: number
+          catalog_type?: string
+          created_at?: string
           indexed_at?: string
+          is_available?: boolean
           last_modified?: number | null
+          last_seen_generation?: string | null
           name: string
           normalized_name: string
           price_change_number?: number | null
+          source?: string
+          synced_at?: string
+          updated_at?: string
         }
         Update: {
           app_type?: string
           appid?: number
+          catalog_type?: string
+          created_at?: string
           indexed_at?: string
+          is_available?: boolean
           last_modified?: number | null
+          last_seen_generation?: string | null
           name?: string
           normalized_name?: string
           price_change_number?: number | null
+          source?: string
+          synced_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -658,73 +679,145 @@ export type Database = {
         Row: {
           apps_processed: number
           completed_at: string | null
+          duration_ms: number | null
           end_appid: number
           errors: Json
+          final_cursor: number
           id: string
+          ignored_count: number
+          initial_cursor: number
+          inserted_count: number
+          lock_token: string | null
+          mode: string
           pages_processed: number
+          received_count: number
           start_appid: number
           started_at: string
           status: string
           trigger_source: string
+          updated_count: number
         }
         Insert: {
           apps_processed?: number
           completed_at?: string | null
+          duration_ms?: number | null
           end_appid?: number
           errors?: Json
+          final_cursor?: number
           id?: string
+          ignored_count?: number
+          initial_cursor?: number
+          inserted_count?: number
+          lock_token?: string | null
+          mode?: string
           pages_processed?: number
+          received_count?: number
           start_appid?: number
           started_at?: string
           status?: string
           trigger_source: string
+          updated_count?: number
         }
         Update: {
           apps_processed?: number
           completed_at?: string | null
+          duration_ms?: number | null
           end_appid?: number
           errors?: Json
+          final_cursor?: number
           id?: string
+          ignored_count?: number
+          initial_cursor?: number
+          inserted_count?: number
+          lock_token?: string | null
+          mode?: string
           pages_processed?: number
+          received_count?: number
           start_appid?: number
           started_at?: string
           status?: string
           trigger_source?: string
+          updated_count?: number
         }
         Relationships: []
       }
       steam_catalog_sync_state: {
         Row: {
+          bootstrap_completed_at: string | null
+          bootstrap_generation: string | null
+          bootstrap_last_appid: number
+          bootstrap_started_at: string | null
+          catalog_complete: boolean
           if_modified_since: number
+          incremental_last_appid: number
           last_appid: number
+          last_appid_checkpoint: number
           last_completed_at: string | null
           last_error: string | null
+          last_full_sync_at: string | null
+          last_incremental_sync_at: string | null
+          last_modified_checkpoint: number
+          last_page_size: number
           last_started_at: string | null
+          lease_expires_at: string | null
+          lock_token: string | null
           processed_apps: number
           singleton: boolean
           status: string
+          sync_mode: string
+          total_indexed: number
           updated_at: string
         }
         Insert: {
+          bootstrap_completed_at?: string | null
+          bootstrap_generation?: string | null
+          bootstrap_last_appid?: number
+          bootstrap_started_at?: string | null
+          catalog_complete?: boolean
           if_modified_since?: number
+          incremental_last_appid?: number
           last_appid?: number
+          last_appid_checkpoint?: number
           last_completed_at?: string | null
           last_error?: string | null
+          last_full_sync_at?: string | null
+          last_incremental_sync_at?: string | null
+          last_modified_checkpoint?: number
+          last_page_size?: number
           last_started_at?: string | null
+          lease_expires_at?: string | null
+          lock_token?: string | null
           processed_apps?: number
           singleton?: boolean
           status?: string
+          sync_mode?: string
+          total_indexed?: number
           updated_at?: string
         }
         Update: {
+          bootstrap_completed_at?: string | null
+          bootstrap_generation?: string | null
+          bootstrap_last_appid?: number
+          bootstrap_started_at?: string | null
+          catalog_complete?: boolean
           if_modified_since?: number
+          incremental_last_appid?: number
           last_appid?: number
+          last_appid_checkpoint?: number
           last_completed_at?: string | null
           last_error?: string | null
+          last_full_sync_at?: string | null
+          last_incremental_sync_at?: string | null
+          last_modified_checkpoint?: number
+          last_page_size?: number
           last_started_at?: string | null
+          lease_expires_at?: string | null
+          lock_token?: string | null
           processed_apps?: number
           singleton?: boolean
           status?: string
+          sync_mode?: string
+          total_indexed?: number
           updated_at?: string
         }
         Relationships: []
@@ -820,6 +913,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      checkpoint_steam_catalog_sync: {
+        Args: {
+          claim_token: string
+          next_cursor: number
+          page_size: number
+          received_delta: number
+          requested_mode: string
+        }
+        Returns: boolean
+      }
+      claim_steam_catalog_sync: {
+        Args: {
+          lease_seconds?: number
+          requested_mode: string
+          requested_restart?: boolean
+        }
+        Returns: {
+          acquired: boolean
+          claim_token: string
+          generation: string
+          modified_since: number
+          start_cursor: number
+          sync_mode: string
+        }[]
+      }
       cleanup_expired_sessions: {
         Args: { batch_size?: number; dry_run?: boolean }
         Returns: number
@@ -836,6 +954,20 @@ export type Database = {
       draw_session_game: {
         Args: { target_session_id: string; weighted?: boolean }
         Returns: Json
+      }
+      fail_steam_catalog_sync: {
+        Args: { claim_token: string; safe_error: string }
+        Returns: boolean
+      }
+      finish_steam_catalog_sync: {
+        Args: {
+          claim_token: string
+          final_cursor: number
+          modified_checkpoint: number
+          reached_end: boolean
+          requested_mode: string
+        }
+        Returns: boolean
       }
       join_session: {
         Args: { member_display_name: string; session_code: string }
@@ -855,7 +987,11 @@ export type Database = {
         }[]
       }
       search_steam_apps: {
-        Args: { result_limit?: number; search_query: string }
+        Args: {
+          result_limit?: number
+          result_offset?: number
+          search_query: string
+        }
         Returns: {
           app_type: string
           appid: number
@@ -864,6 +1000,10 @@ export type Database = {
           header_image: string
           metadata_status: Database["public"]["Enums"]["metadata_status"]
           name: string
+          platforms: string[]
+          release_date: string
+          relevance: number
+          total_matches: number
         }[]
       }
       unaccent_safe: { Args: { value: string }; Returns: string }

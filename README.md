@@ -69,7 +69,7 @@ npx supabase migration new nome_da_mudanca
 npx supabase test db supabase/tests/rls.sql
 ```
 
-Migrations ficam em `supabase/migrations/`; `supabase/seed.sql` cria um catálogo parcial, sem depender da Steam. No Dashboard, habilite **Authentication → Providers → Anonymous Sign-Ins** antes de testar sessões rápidas. Ative CAPTCHA/Turnstile antes de produção.
+Migrations ficam em `supabase/migrations/`; `supabase/seed.sql` não injeta jogos. Catálogos determinísticos existem somente em `tests/fixtures/`. No Dashboard, habilite **Authentication → Providers → Anonymous Sign-Ins** antes de testar sessões rápidas. Ative CAPTCHA/Turnstile antes de produção.
 
 O projeto usa publishable keys atuais e grants explícitos, necessários para novos projetos Supabase. Todas as 15 tabelas públicas têm RLS.
 
@@ -118,7 +118,7 @@ Consulte [identidade visual](docs/brand.md), [arquitetura](docs/architecture.md)
 - Anonymous Sign-Ins deve permanecer habilitado no projeto Supabase usado pelo ambiente.
 - Google, Discord, magic link e account linking possuem interface; os providers exigem configuração no Supabase.
 - Detalhes de loja usam endpoint não documentado e permanecem atrás de feature flag.
-- O primeiro catálogo amplo exige `STEAM_WEB_API_KEY` e execução protegida de `/api/steam/sync`; sem isso, o bootstrap cobre apenas os casos de fumaça Terraria e Counter-Strike 2.
+- O primeiro catálogo amplo exige uma `STEAM_WEB_API_KEY` aceita e execução protegida de `/api/steam/sync?mode=full`; sem isso, o catálogo permanece explicitamente parcial e não apresenta presets como resultados reais.
 - O E2E multicontexto depende de um ambiente Supabase de teste com autenticação anônima ativa.
 
 ## Roadmap
