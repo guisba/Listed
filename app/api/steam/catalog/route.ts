@@ -2,14 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSteamCatalogStatus, runSteamCatalogSync } from "@/lib/steam/catalog-sync";
 import { SteamError } from "@/lib/steam/errors";
-import { validateSteamCatalogHosts } from "@/lib/steam/catalog-provider";
+import { validateSteamCatalogHosts, validateSteamPublicCatalogPage } from "@/lib/steam/catalog-provider";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 const actionSchema = z.object({
-  action: z.enum(["continue_bootstrap", "run_incremental", "reprocess_failures", "validate_provider_hosts"]),
+  action: z.enum(["continue_bootstrap", "run_incremental", "reprocess_failures", "validate_provider_hosts", "validate_public_page"]),
   pages: z.number().int().min(1).max(100).optional(),
+  cursor: z.number().int().nonnegative().optional(),
 });
 
 function authorized(request: NextRequest) {
@@ -40,6 +41,9 @@ export async function POST(request: NextRequest) {
   try {
     if (parsed.data.action === "validate_provider_hosts") {
       return NextResponse.json(await validateSteamCatalogHosts());
+    }
+    if (parsed.data.action === "validate_public_page") {
+      return NextResponse.json(await validateSteamPublicCatalogPage(parsed.data.cursor ?? 0));
     }
     const mode = parsed.data.action === "run_incremental" ? "incremental" : "full";
     const result = await runSteamCatalogSync({
