@@ -8,6 +8,7 @@ describe("normalizeName para o catálogo Steam", () => {
     ["Counter-Strike 2", "counter strike 2"],
     ["Tom Clancy’s Rainbow Six Siege", "tom clancys rainbow six siege"],
     ["  Pokémon   TCG™  ", "pokemon tcg"],
+    ["ルナティックドーン 前途への道標", "ルナティックドーン 前途への道標"],
   ])("normaliza %s sem aliases específicos", (input, expected) => {
     expect(normalizeName(input)).toBe(expected);
   });
