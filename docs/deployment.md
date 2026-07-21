@@ -59,4 +59,15 @@ Os endpoints cron exigem `Authorization: Bearer <CRON_SECRET>` e rejeitam
 segredo em query string. Antes de ativá-los, configure `SUPABASE_SECRET_KEY` e
 valide primeiro uma execução pequena no Preview.
 
+## Bootstrap administrativo Steam
+
+O workflow manual `.github/workflows/steam-catalog-bootstrap.yml` não faz deployment. Configure em **GitHub → AKGuima/Listed → Settings → Secrets and variables → Actions** apenas:
+
+- `SUPABASE_URL`
+- `SUPABASE_SECRET_KEY`
+
+Use primeiro `dry_run=true`. A execução real deve começar com `max_batches=1`, validar o checkpoint e só então continuar sem limite. O workflow usa `npm ci`, timeout de 45 minutos, concorrência única e resumo sem segredos; não armazena o catálogo como artifact.
+
+O endpoint legado não precisa de Steam key. A secret key do Supabase permanece exclusiva do processo Node/GitHub Actions e nunca é enviada ao navegador.
+
 Sites usa `.openai/hosting.json` com D1/R2 nulos porque Supabase é a persistência oficial. Vercel usa `vercel.json` e `npm run build:vercel`.

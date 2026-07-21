@@ -17,6 +17,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "steam:catalog:status": "node --env-file-if-exists=.env.local --import tsx scripts/steam-catalog-status.ts",
+    "steam:catalog:bootstrap-legacy": "node --env-file-if-exists=.env.local --import tsx scripts/steam-catalog-bootstrap.ts",
     "db:new": "supabase migration new",
     "db:test": "vitest run tests/database"
   },
@@ -61,6 +63,7 @@
     "react-server-dom-webpack": "19.2.6",
     "supabase": "2.109.1",
     "tailwindcss": "4.2.1",
+    "tsx": "4.20.6",
     "typescript": "5.9.3",
     "vinext": "0.0.50",
     "vite": "8.1.5",

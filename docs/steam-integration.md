@@ -2,7 +2,8 @@
 
 ## Fontes e limites
 
-- Catálogo oficial: `IStoreService/GetAppList/v1`, com chave server-only, paginação por `last_appid` e atualização incremental por `if_modified_since`.
+- Catálogo oficial preferencial: `IStoreService/GetAppList/v1`, com chave server-only, paginação por `last_appid` e atualização incremental por `if_modified_since`.
+- Bootstrap temporário: `GET https://api.steampowered.com/ISteamApps/GetAppList/v2/`, sem autenticação, parâmetros ou filtros. Ele fornece somente `appid + name` e nunca é chamado pela busca live.
 - Detalhes: `store.steampowered.com/api/appdetails`. Esse endpoint não é documentado pela Valve; fica isolado em `SteamStoreProvider`, atrás de `STEAM_PROVIDER_ENABLED`, com timeout, uma repetição em falhas transitórias, sanitização e fallback de cache.
 - Não há scraping HTML. Community tags permanecem desativadas.
 
@@ -36,6 +37,20 @@ Cada execução usa `IStoreService/GetAppList/v1` somente com jogos, cursor `las
 `steam_catalog_sync_state` mantém checkpoints separados, geração do bootstrap, timestamps completo/incremental, total indexado, última página, completude, lease e erro seguro. `steam_catalog_sync_runs` registra recebidos, inseridos, atualizados, ignorados, erros, cursores e duração. Ambas têm RLS e nenhum grant para clientes.
 
 Não existem jogos fixos no runtime ou no seed. Antes da conclusão, a busca usa o índice parcial e informa essa condição; AppID e URL continuam hidratando dados reais pelo provider de detalhes. O endpoint administrativo `GET|POST /api/steam/catalog` usa o mesmo Bearer e permite consultar status, continuar bootstrap, executar incremental e reprocessar falhas.
+
+### Bootstrap público legado
+
+`npm run steam:catalog:bootstrap-legacy` baixa a resposta inteira no servidor, exige `application/json`, limita o payload a 96 MiB, valida `applist.apps`, normaliza nomes e calcula SHA-256. A resposta não é logada, armazenada como payload bruto, enviada ao browser ou commitada. O uso de memória foi mantido simples com `JSON.parse`: o limite defensivo e a execução fora de Functions curtas evitam memória sem teto; não foi adicionada biblioteca de streaming antes de existir uma resposta real para medir.
+
+O upsert é feito por RPC em lotes de 1.000. A lease no banco e a concorrência do workflow evitam execuções paralelas. `legacy_source_hash`, total e `legacy_last_batch` permitem retomar apenas se o download for idêntico; se a Valve alterar a lista, o processo reinicia de forma idempotente. O estado passa por `syncing`, `partial`, `complete_legacy` ou `failed`. `complete_legacy` não equivale a `complete_official`.
+
+Registros novos recebem `catalog_type=unknown`, `source=legacy_public_applist` e `catalog_source=legacy_public_applist`. Para AppIDs já hidratados, `source=individual_lookup` é preservado enquanto `catalog_source` registra que o nome também veio do catálogo. Ao selecionar um candidato desconhecido, o pipeline de detalhes confirma `type`; DLC, demo, software, vídeo ou ferramenta não são apresentados como jogo válido.
+
+O workflow `steam-catalog-bootstrap.yml` é somente `workflow_dispatch`, usa lockfile, timeout, concorrência única, secrets do GitHub Actions e não gera deployment/artifact. Localmente, `.env.local` pode fornecer `NEXT_PUBLIC_SUPABASE_URL` e `SUPABASE_SECRET_KEY`, mas os scripts nunca criam ou alteram esse arquivo.
+
+### Disponibilidade observada
+
+Em 21/07/2026, duas chamadas server-side ao endereço exato, sem chave ou parâmetros, retornaram HTTP 404 e `text/html`. A própria documentação Steamworks marca `GetAppList/v2` como descontinuado por não escalar e recomenda `IStoreService`. Portanto, o 404 não foi causado por host partner, chave, `input_json`, POST ou parâmetros na implementação atual: a rota pública da Valve não entregou o catálogo. O dry-run aborta antes de qualquer escrita nessa situação. O fallback deve ser removido quando `IStoreService` estiver operacional e o bootstrap oficial tiver sido concluído.
 
 ## Busca indexada
 

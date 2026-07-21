@@ -54,6 +54,7 @@ function normalizeLanguages(value?: string) {
 }
 
 export class SteamStoreProvider implements SteamProvider {
+  readonly id = "individual_lookup" as const;
   constructor(
     private readonly fetcher: typeof fetch = fetch,
     private readonly timeoutMs = 6_000,

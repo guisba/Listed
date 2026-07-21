@@ -628,6 +628,7 @@ export type Database = {
         Row: {
           app_type: string
           appid: number
+          catalog_source: string | null
           catalog_type: string
           created_at: string
           indexed_at: string
@@ -644,6 +645,7 @@ export type Database = {
         Insert: {
           app_type?: string
           appid: number
+          catalog_source?: string | null
           catalog_type?: string
           created_at?: string
           indexed_at?: string
@@ -660,6 +662,7 @@ export type Database = {
         Update: {
           app_type?: string
           appid?: number
+          catalog_source?: string | null
           catalog_type?: string
           created_at?: string
           indexed_at?: string
@@ -763,6 +766,14 @@ export type Database = {
           last_page_size: number
           last_started_at: string | null
           lease_expires_at: string | null
+          legacy_batch_size: number | null
+          legacy_completed_at: string | null
+          legacy_last_batch: number
+          legacy_source_hash: string | null
+          legacy_started_at: string | null
+          legacy_total_failed: number
+          legacy_total_persisted: number
+          legacy_total_received: number
           lock_token: string | null
           processed_apps: number
           provider: string
@@ -790,6 +801,14 @@ export type Database = {
           last_page_size?: number
           last_started_at?: string | null
           lease_expires_at?: string | null
+          legacy_batch_size?: number | null
+          legacy_completed_at?: string | null
+          legacy_last_batch?: number
+          legacy_source_hash?: string | null
+          legacy_started_at?: string | null
+          legacy_total_failed?: number
+          legacy_total_persisted?: number
+          legacy_total_received?: number
           lock_token?: string | null
           processed_apps?: number
           provider?: string
@@ -817,6 +836,14 @@ export type Database = {
           last_page_size?: number
           last_started_at?: string | null
           lease_expires_at?: string | null
+          legacy_batch_size?: number | null
+          legacy_completed_at?: string | null
+          legacy_last_batch?: number
+          legacy_source_hash?: string | null
+          legacy_started_at?: string | null
+          legacy_total_failed?: number
+          legacy_total_persisted?: number
+          legacy_total_received?: number
           lock_token?: string | null
           processed_apps?: number
           provider?: string
@@ -929,6 +956,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      claim_legacy_public_applist: {
+        Args: {
+          p_batch_size: number
+          p_lease_seconds?: number
+          p_source_hash: string
+          p_total_received: number
+        }
+        Returns: {
+          acquired: boolean
+          claim_token: string
+          resumed: boolean
+          start_batch: number
+        }[]
+      }
       claim_steam_catalog_sync: {
         Args: {
           lease_seconds?: number
@@ -961,6 +1002,10 @@ export type Database = {
         Args: { target_session_id: string; weighted?: boolean }
         Returns: Json
       }
+      fail_legacy_public_applist: {
+        Args: { p_claim_token: string; p_safe_error: string }
+        Returns: boolean
+      }
       fail_steam_catalog_sync: {
         Args: { claim_token: string; safe_error: string }
         Returns: boolean
@@ -973,6 +1018,10 @@ export type Database = {
           reached_end: boolean
           requested_mode: string
         }
+        Returns: boolean
+      }
+      finish_legacy_public_applist: {
+        Args: { p_claim_token: string; p_total_failed?: number }
         Returns: boolean
       }
       join_session: {
@@ -1014,7 +1063,20 @@ export type Database = {
         }[]
       }
       normalize_steam_name: { Args: { value: string }; Returns: string }
+      pause_legacy_public_applist: {
+        Args: { p_claim_token: string }
+        Returns: boolean
+      }
       unaccent_safe: { Args: { value: string }; Returns: string }
+      upsert_legacy_public_applist_batch: {
+        Args: { p_apps: Json; p_batch_index: number; p_claim_token: string }
+        Returns: {
+          ignored_count: number
+          inserted_count: number
+          persisted_count: number
+          updated_count: number
+        }[]
+      }
     }
     Enums: {
       decision_method:

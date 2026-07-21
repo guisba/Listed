@@ -27,7 +27,7 @@ interface ExistingIndexRow {
 }
 
 export interface SteamCatalogStatus {
-  status: "idle" | "running" | "complete" | "partial" | "failed";
+  status: "empty" | "idle" | "running" | "syncing" | "complete" | "partial" | "complete_legacy" | "complete_official" | "failed";
   mode: SteamSyncMode;
   catalogComplete: boolean;
   indexedGames: number;
@@ -40,7 +40,7 @@ export interface SteamCatalogStatus {
   lastSyncAt: string | null;
   hasError: boolean;
   running: boolean;
-  provider: "official_store_service" | "legacy_app_list" | "steamkit";
+  provider: "official_store_service" | "legacy_public_applist";
 }
 
 export interface SteamSyncResult {
@@ -99,7 +99,7 @@ export async function getSteamCatalogStatus(admin = getSupabaseAdmin()): Promise
     lastIncrementalSyncAt: data.last_incremental_sync_at as string | null,
     lastSyncAt: data.last_completed_at as string | null,
     hasError: Boolean(data.last_error),
-    running: data.status === "running" && leaseActive,
+    running: (data.status === "running" || data.status === "syncing") && leaseActive,
     provider: data.provider as SteamCatalogStatus["provider"],
   };
 }
@@ -114,6 +114,7 @@ function pageRows(page: SteamCatalogPage, mode: SteamSyncMode, generation: strin
       app_type: "game",
       catalog_type: "game",
       source: "official_store_service",
+      catalog_source: "official_store_service",
       last_modified: app.last_modified || null,
       price_change_number: app.price_change_number || null,
       is_available: true,

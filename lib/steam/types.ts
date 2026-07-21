@@ -48,9 +48,10 @@ export interface SteamSearchMatch {
   relevance: number;
   metadataStatus: SteamMetadataStatus | null;
   cacheExpiresAt: string | null;
-  source?: "official_store_service" | "legacy_app_list" | "steamkit" | "individual_lookup";
+  source?: "official_store_service" | "legacy_public_applist" | "individual_lookup";
 }
 
 export interface SteamProvider {
+  readonly id: "individual_lookup";
   getApp(appid: number): Promise<SteamGame | null>;
 }

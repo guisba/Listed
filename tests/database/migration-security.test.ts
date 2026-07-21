@@ -6,6 +6,7 @@ const migration = readFileSync(join(process.cwd(), "supabase", "migrations", "20
 const steamMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260720225653_steam_catalog_pipeline.sql"), "utf8");
 const fullCatalogMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260721122538_steam_catalog_full_search.sql"), "utf8");
 const presetRemovalMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260721124406_remove_steam_runtime_presets.sql"), "utf8");
+const legacyBootstrapMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260721144016_add_legacy_public_applist_bootstrap.sql"), "utf8");
 const seed = readFileSync(join(process.cwd(), "supabase", "seed.sql"), "utf8");
 const exposedTables = ["profiles", "groups", "group_members", "sessions", "session_members", "session_invites", "catalog_games", "steam_app_index", "session_games", "votes", "game_ownership", "user_game_library", "decision_runs", "decision_results", "audit_logs"];
 
@@ -27,6 +28,12 @@ describe("database security migration", () => {
     expect(fullCatalogMigration).toContain("checkpoint_steam_catalog_sync");
     expect(fullCatalogMigration).toContain("lease_expires_at");
     expect(fullCatalogMigration).toMatch(/revoke all on function public\.claim_steam_catalog_sync[\s\S]+from public, anon, authenticated/);
+  });
+  it("protege o bootstrap legado e preserva a origem de detalhes", () => {
+    expect(legacyBootstrapMigration).toMatch(/claim_legacy_public_applist[\s\S]+security invoker/);
+    expect(legacyBootstrapMigration).toContain("grant execute on function public.upsert_legacy_public_applist_batch(uuid, integer, jsonb) to service_role");
+    expect(legacyBootstrapMigration).toContain("when public.steam_app_index.source = 'individual_lookup' then public.steam_app_index.source");
+    expect(legacyBootstrapMigration).toContain("catalog_source = excluded.catalog_source");
   });
   it("indexa busca por prefixo e similaridade sem presets no seed", () => {
     expect(fullCatalogMigration).toContain("text_pattern_ops");

@@ -30,7 +30,7 @@ interface Props {
 
 interface CatalogMetadata {
   status: "complete" | "syncing" | "partial" | "empty" | "failed" | "unknown";
-  provider?: "official_store_service" | "legacy_app_list" | "steamkit";
+  provider?: "official_store_service" | "legacy_public_applist";
   indexedGames: number;
   lastSyncAt: string | null;
 }
@@ -278,7 +278,7 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
                   <span className="block text-sm font-semibold leading-5"><HighlightedName name={match.name} query={query} /></span>
                   <span className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
                     <span>AppID {match.appid}</span>
-                    <span>{match.releaseDate?.match(/\d{4}/)?.[0] ?? "Jogo"}</span>
+                    <span>{match.releaseDate?.match(/\d{4}/)?.[0] ?? (match.type === "unknown" ? "Tipo será confirmado ao abrir a prévia" : "Jogo")}</span>
                     {match.platforms.slice(0, 2).map((platform) => <span key={platform}>{platform}</span>)}
                   </span>
                 </span>

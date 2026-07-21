@@ -43,4 +43,6 @@ Clientes autenticados podem selecionar índice/cache e executar apenas `search_s
 - GIN `pg_trgm` em `normalized_name` para similaridade e contenção.
 - Índice parcial considera apenas jogos disponíveis.
 - Índices em `last_modified` e `(source, synced_at)` apoiam incremental e diagnóstico.
+- `catalog_source` separa a origem do índice (`legacy_public_applist` ou `official_store_service`) da origem dos metadados sob demanda (`individual_lookup`).
+- O bootstrap legado mantém hash, lote, totais, lease e estados `syncing`, `partial`, `complete_legacy` e `failed`; seus RPCs são `security invoker` e executáveis apenas por `service_role`.
 - `unaccent` fica no schema `extensions`; a função normalizadora fixa `search_path`.

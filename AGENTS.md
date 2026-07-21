@@ -33,10 +33,13 @@
 
 - Não faça scraping HTML.
 - `IStoreService/GetAppList/v1` é a fonte oficial para sync incremental.
+- `ISteamApps/GetAppList/v2` pode ser usado somente pelo script/workflow administrativo de bootstrap temporário, sem chave, parâmetros ou acesso pelo browser; valide `applist.apps` antes de persistir.
+- Providers são `official_store_service` (incremental preferencial), `legacy_public_applist` (somente `appid + name`) e `individual_lookup` (detalhes após seleção).
 - O endpoint `appdetails` da Store é instável e só pode ser usado atrás de `STEAM_PROVIDER_ENABLED`.
 - Toda chamada é server-side, com timeout, cache/fallback e sanitização.
 - Autocomplete pesquisa somente `steam_app_index`; nunca chame a Steam a cada tecla.
 - Sync exige `CRON_SECRET`, checkpoint por página e escrita com `SUPABASE_SECRET_KEY`.
+- O bootstrap legado usa lotes de 500–2.000, hash da resposta, lease e checkpoint por lote. Nunca logue ou armazene o payload completo.
 - Preserve os casos de fumaça Terraria/105600 e Counter-Strike 2/730 nos testes.
 
 ## Áreas sensíveis

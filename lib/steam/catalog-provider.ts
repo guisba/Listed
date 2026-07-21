@@ -22,7 +22,10 @@ export interface CatalogPageOptions {
   timeoutMs?: number;
 }
 
-export type SteamCatalogProviderId = "official_store_service";
+export type SteamCatalogProviderId =
+  | "official_store_service"
+  | "legacy_public_applist"
+  | "individual_lookup";
 
 export interface ProviderValidationResult {
   provider: SteamCatalogProviderId;

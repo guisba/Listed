@@ -14,7 +14,7 @@ async function catalogMetadata() {
     return {
       status: status.catalogComplete
         ? "complete" as const
-        : status.status === "running"
+        : status.status === "running" || status.status === "syncing"
           ? "syncing" as const
           : status.status === "failed"
             ? "failed" as const

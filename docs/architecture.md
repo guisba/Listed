@@ -11,6 +11,7 @@ flowchart LR
   ST --> C[(catalog_games cache)]
   B -->|nome + JWT| I[(steam_app_index)]
   N -->|sync incremental| I
+  G[GitHub Actions manual] -->|legacy AppList, appid + name| I
   S --> P[(PostgreSQL + RLS)]
   R --> P
   V[Vercel Cron] -->|Bearer CRON_SECRET| N
@@ -31,7 +32,9 @@ flowchart LR
 
 Criação e ingresso usam RPCs transacionais com `auth.uid()`. Depois do ingresso, leituras e mutations passam pela Data API com RLS. A sala carrega snapshot inicial e assina mudanças de membros, jogos, votos, propriedade, sessão e resultados; Presence mantém apenas IDs efêmeros.
 
-O autocomplete nunca chama a Steam: ele pesquisa `steam_app_index` com trigram. Apenas AppID, URL ou seleção resolvida passa pelo cache e pelo adapter de detalhes. O catálogo oficial é paginado por `last_appid` e `if_modified_since`, com checkpoint por página e histórico de execução. Sem chave/API, jogos manuais continuam disponíveis.
+O autocomplete nunca chama a Steam: ele pesquisa `steam_app_index` com trigram. Apenas AppID, URL ou seleção resolvida passa pelo cache e pelo adapter de detalhes. O catálogo oficial é paginado por `last_appid` e `if_modified_since`, com checkpoint por página e histórico de execução.
+
+Há três providers explícitos: `official_store_service` para atualização incremental preferencial, `legacy_public_applist` para o bootstrap temporário de `appid + name`, e `individual_lookup` para detalhes sob demanda. O fallback legado roda apenas por CLI/GitHub Actions, calcula hash da resposta, persiste lotes retomáveis e nunca participa da rota de busca live. Sem catálogo externo válido, jogos manuais, AppID e URL continuam disponíveis.
 
 ## Cache e deploy
 
