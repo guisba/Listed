@@ -22,6 +22,34 @@ export interface CatalogPageOptions {
   timeoutMs?: number;
 }
 
+export type SteamCatalogProviderId = "official_store_service";
+
+export interface ProviderValidationResult {
+  provider: SteamCatalogProviderId;
+  accepted: boolean;
+  reason: "accepted" | "missing_key" | "rejected" | "unavailable";
+}
+
+export interface SteamCatalogProvider {
+  readonly id: SteamCatalogProviderId;
+  validate(): Promise<ProviderValidationResult>;
+  fetchPage(options?: CatalogPageOptions): Promise<SteamCatalogPage>;
+}
+
+function configuredKey() {
+  const value = process.env.STEAM_WEB_API_KEY?.trim();
+  if (!value) return null;
+  const quoted = (value.startsWith('"') && value.endsWith('"'))
+    || (value.startsWith("'") && value.endsWith("'"));
+  return quoted ? value.slice(1, -1).trim() : value;
+}
+
+function responseError(status: number) {
+  if (status === 401 || status === 403) return new SteamError("provider_auth_rejected", 502);
+  if (status === 429) return new SteamError("rate_limited", 429);
+  return new SteamError("provider_unavailable", 502);
+}
+
 export async function fetchSteamCatalogPage({
   lastAppId = 0,
   ifModifiedSince = 0,
@@ -30,7 +58,7 @@ export async function fetchSteamCatalogPage({
   attempts = 3,
   timeoutMs = 12_000,
 }: CatalogPageOptions = {}) {
-  const key = process.env.STEAM_WEB_API_KEY;
+  const key = configuredKey();
   if (!key) throw new SteamError("sync_not_configured", 503);
 
   const inputJson = JSON.stringify({
@@ -59,10 +87,32 @@ export async function fetchSteamCatalogPage({
     if (response.ok) break;
     if (![429, 500, 502, 503, 504].includes(response.status) || attempt + 1 >= attempts) break;
   }
-  if (!response?.ok) throw new SteamError("provider_unavailable", 502);
+  if (!response?.ok) throw responseError(response?.status ?? 502);
   const payload = (await response.json()) as { response?: SteamCatalogPage };
   if (!payload.response || !Array.isArray(payload.response.apps)) {
     throw new SteamError("provider_unavailable", 502);
   }
   return payload.response;
+}
+
+export class OfficialStoreServiceProvider implements SteamCatalogProvider {
+  readonly id = "official_store_service" as const;
+
+  async validate(): Promise<ProviderValidationResult> {
+    if (!configuredKey()) return { provider: this.id, accepted: false, reason: "missing_key" };
+    try {
+      await this.fetchPage({ lastAppId: 0, maxResults: 1, attempts: 1 });
+      return { provider: this.id, accepted: true, reason: "accepted" };
+    } catch (error) {
+      return {
+        provider: this.id,
+        accepted: false,
+        reason: error instanceof SteamError && error.code === "provider_auth_rejected" ? "rejected" : "unavailable",
+      };
+    }
+  }
+
+  fetchPage(options: CatalogPageOptions = {}) {
+    return fetchSteamCatalogPage(options);
+  }
 }

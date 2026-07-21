@@ -29,7 +29,8 @@ interface Props {
 }
 
 interface CatalogMetadata {
-  status: "complete" | "syncing" | "partial" | "unknown";
+  status: "complete" | "syncing" | "partial" | "empty" | "failed" | "unknown";
+  provider?: "official_store_service" | "legacy_app_list" | "steamkit";
   indexedGames: number;
   lastSyncAt: string | null;
 }
@@ -74,9 +75,13 @@ function ResultSkeletons() {
 
 function CatalogNotice({ catalog }: { catalog: CatalogMetadata | null }) {
   if (!catalog || catalog.status === "complete") return null;
-  const message = catalog.status === "syncing"
-    ? "O catálogo Steam está sendo sincronizado. A busca pode não encontrar todos os jogos por alguns minutos."
-    : "O catálogo Steam ainda está incompleto. AppID e links oficiais continuam disponíveis.";
+  const message = catalog.status === "syncing" || catalog.status === "partial"
+    ? "O catálogo Steam ainda está sendo atualizado. Alguns jogos podem não aparecer."
+    : catalog.status === "empty"
+      ? "O catálogo Steam ainda não foi sincronizado."
+      : catalog.status === "failed"
+        ? "A busca por nome está temporariamente limitada. Você ainda pode usar um AppID ou link da Steam."
+        : "O estado do catálogo Steam não está disponível. AppID e links oficiais continuam disponíveis.";
   return <p className="border-b border-border bg-amber-500/10 px-4 py-2.5 text-xs leading-5 text-amber-800 dark:text-amber-200">{message}</p>;
 }
 

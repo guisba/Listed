@@ -21,6 +21,8 @@ export function normalizeName(value: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLocaleLowerCase("pt-BR")
+    .replace(/['’`´]/g, "")
     .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\s+/g, " ");
+    .replace(/\s+/g, " ")
+    .trim();
 }

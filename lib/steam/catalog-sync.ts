@@ -40,6 +40,7 @@ export interface SteamCatalogStatus {
   lastSyncAt: string | null;
   hasError: boolean;
   running: boolean;
+  provider: "official_store_service" | "legacy_app_list" | "steamkit";
 }
 
 export interface SteamSyncResult {
@@ -69,7 +70,7 @@ interface SyncOptions {
 }
 
 const INDEX_SELECT = "appid,name,last_modified,price_change_number,is_available";
-const STATE_SELECT = "status,sync_mode,catalog_complete,total_indexed,last_appid_checkpoint,last_page_size,bootstrap_started_at,bootstrap_completed_at,last_full_sync_at,last_incremental_sync_at,last_completed_at,last_error,lease_expires_at";
+const STATE_SELECT = "status,sync_mode,catalog_complete,total_indexed,last_appid_checkpoint,last_page_size,bootstrap_started_at,bootstrap_completed_at,last_full_sync_at,last_incremental_sync_at,last_completed_at,last_error,lease_expires_at,provider";
 
 function asNumber(value: unknown) {
   const number = Number(value ?? 0);
@@ -99,6 +100,7 @@ export async function getSteamCatalogStatus(admin = getSupabaseAdmin()): Promise
     lastSyncAt: data.last_completed_at as string | null,
     hasError: Boolean(data.last_error),
     running: data.status === "running" && leaseActive,
+    provider: data.provider as SteamCatalogStatus["provider"],
   };
 }
 
@@ -111,7 +113,7 @@ function pageRows(page: SteamCatalogPage, mode: SteamSyncMode, generation: strin
       normalized_name: normalizeName(app.name),
       app_type: "game",
       catalog_type: "game",
-      source: "steam_catalog_sync",
+      source: "official_store_service",
       last_modified: app.last_modified || null,
       price_change_number: app.price_change_number || null,
       is_available: true,
@@ -210,6 +212,7 @@ export async function runSteamCatalogSync({
     start_appid: cursor,
     initial_cursor: cursor,
     lock_token: claim.claim_token,
+    provider: "official_store_service",
   }).select("id").single();
   if (runError) {
     await admin.rpc("fail_steam_catalog_sync", { claim_token: claim.claim_token, safe_error: "Falha ao registrar a execução." });

@@ -690,6 +690,7 @@ export type Database = {
           lock_token: string | null
           mode: string
           pages_processed: number
+          provider: string
           received_count: number
           start_appid: number
           started_at: string
@@ -711,6 +712,7 @@ export type Database = {
           lock_token?: string | null
           mode?: string
           pages_processed?: number
+          provider?: string
           received_count?: number
           start_appid?: number
           started_at?: string
@@ -732,6 +734,7 @@ export type Database = {
           lock_token?: string | null
           mode?: string
           pages_processed?: number
+          provider?: string
           received_count?: number
           start_appid?: number
           started_at?: string
@@ -762,6 +765,7 @@ export type Database = {
           lease_expires_at: string | null
           lock_token: string | null
           processed_apps: number
+          provider: string
           singleton: boolean
           status: string
           sync_mode: string
@@ -788,6 +792,7 @@ export type Database = {
           lease_expires_at?: string | null
           lock_token?: string | null
           processed_apps?: number
+          provider?: string
           singleton?: boolean
           status?: string
           sync_mode?: string
@@ -814,6 +819,7 @@ export type Database = {
           lease_expires_at?: string | null
           lock_token?: string | null
           processed_apps?: number
+          provider?: string
           singleton?: boolean
           status?: string
           sync_mode?: string
@@ -997,6 +1003,7 @@ export type Database = {
           appid: number
           cache_expires_at: string
           catalog_game_id: string
+          catalog_source: string
           header_image: string
           metadata_status: Database["public"]["Enums"]["metadata_status"]
           name: string
@@ -1006,6 +1013,7 @@ export type Database = {
           total_matches: number
         }[]
       }
+      normalize_steam_name: { Args: { value: string }; Returns: string }
       unaccent_safe: { Args: { value: string }; Returns: string }
     }
     Enums: {
@@ -1185,4 +1193,3 @@ export const Constants = {
     },
   },
 } as const
-

@@ -12,7 +12,16 @@ async function catalogMetadata() {
   try {
     const status = await getSteamCatalogStatus();
     return {
-      status: status.catalogComplete ? "complete" as const : status.status === "running" ? "syncing" as const : "partial" as const,
+      status: status.catalogComplete
+        ? "complete" as const
+        : status.status === "running"
+          ? "syncing" as const
+          : status.status === "failed"
+            ? "failed" as const
+            : status.indexedGames === 0
+              ? "empty" as const
+              : "partial" as const,
+      provider: status.provider,
       indexedGames: status.indexedGames,
       lastSyncAt: status.lastSyncAt,
     };
@@ -62,6 +71,7 @@ export async function GET(request: NextRequest) {
       metadataStatus: row.metadata_status ?? null,
       cacheExpiresAt: row.cache_expires_at ?? null,
       relevance: Number(row.relevance ?? 0),
+      source: typeof row.catalog_source === "string" ? row.catalog_source : "individual_lookup",
     }));
     const total = Number((data?.[0] as Record<string, unknown> | undefined)?.total_matches ?? games.length);
     return NextResponse.json({

@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/supabase/server", () => ({ createSupabaseServerClient: vi.fn() }));
 vi.mock("@/lib/steam/cache", () => ({ resolveSteamGame: vi.fn() }));
-vi.mock("@/lib/steam/catalog-sync", () => ({ getSteamCatalogStatus: vi.fn().mockResolvedValue({ status: "partial", catalogComplete: false, indexedGames: 42, lastSyncAt: null }) }));
+vi.mock("@/lib/steam/catalog-sync", () => ({ getSteamCatalogStatus: vi.fn().mockResolvedValue({ status: "partial", catalogComplete: false, indexedGames: 42, lastSyncAt: null, provider: "official_store_service" }) }));
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { resolveSteamGame } from "@/lib/steam/cache";
@@ -22,10 +22,10 @@ describe("GET /api/steam/search", () => {
   });
 
   it("consulta o índice local por nome", async () => {
-    rpc.mockResolvedValue({ data: [{ appid: 105600, name: "Terraria", app_type: "game", catalog_game_id: null }], error: null });
+    rpc.mockResolvedValue({ data: [{ appid: 105600, name: "Terraria", app_type: "game", catalog_source: "official_store_service", catalog_game_id: null }], error: null });
     const response = await GET(new NextRequest("http://localhost/api/steam/search?q=Terraria"));
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({ kind: "matches", source: "index", games: [{ appid: 105600, name: "Terraria" }] });
+    await expect(response.json()).resolves.toMatchObject({ kind: "matches", source: "index", catalog: { provider: "official_store_service" }, games: [{ appid: 105600, name: "Terraria", source: "official_store_service" }] });
     expect(rpc).toHaveBeenCalledWith("search_steam_apps", { search_query: "Terraria", result_limit: 12, result_offset: 0 });
   });
 

@@ -48,6 +48,7 @@ export interface SteamSearchMatch {
   relevance: number;
   metadataStatus: SteamMetadataStatus | null;
   cacheExpiresAt: string | null;
+  source?: "official_store_service" | "legacy_app_list" | "steamkit" | "individual_lookup";
 }
 
 export interface SteamProvider {
