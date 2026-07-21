@@ -87,6 +87,7 @@ export interface SteamHostProbeResult {
   accepted: boolean;
   reason: ProviderValidationResult["reason"];
   stage?: "content_type" | "html" | "json" | "schema" | "pagination";
+  schemaIssues?: Array<{ path: string; code: string }>;
 }
 
 function configuredKey() {
@@ -162,7 +163,17 @@ async function parseCatalogResponse(response: Response): Promise<SteamCatalogPag
     throw new SteamError("provider_unavailable", 502, { cause: { stage: "json" } });
   }
   const parsed = steamCatalogResponseSchema.safeParse(raw);
-  if (!parsed.success) throw new SteamError("provider_unavailable", 502, { cause: { stage: "schema" } });
+  if (!parsed.success) {
+    throw new SteamError("provider_unavailable", 502, {
+      cause: {
+        stage: "schema",
+        schemaIssues: parsed.error.issues.slice(0, 10).map((issue) => ({
+          path: issue.path.join("."),
+          code: issue.code,
+        })),
+      },
+    });
+  }
 
   const apps = parsed.data.response.apps;
   const lastAppId = parsed.data.response.last_appid ?? apps.at(-1)?.appid ?? 0;
@@ -226,14 +237,14 @@ export async function fetchSteamCatalogPage(options: CatalogPageOptions = {}) {
   return parseCatalogResponse(response);
 }
 
-async function probeSteamCatalogHost(baseUrl: string, fetcher: typeof fetch, lastAppId = 0): Promise<SteamHostProbeResult> {
+async function probeSteamCatalogHost(baseUrl: string, fetcher: typeof fetch, lastAppId = 0, maxResults = 10): Promise<SteamHostProbeResult> {
   const startedAt = performance.now();
   let response: Response | null = null;
   try {
     const requested = await requestCatalogPage({
       baseUrl,
       lastAppId,
-      maxResults: 10,
+      maxResults,
       attempts: 1,
       authMode: "query",
       fetcher,
@@ -254,7 +265,7 @@ async function probeSteamCatalogHost(baseUrl: string, fetcher: typeof fetch, las
     };
   } catch (error) {
     const cause = error instanceof SteamError && error.cause && typeof error.cause === "object"
-      ? error.cause as { upstreamStatus?: number | null; contentType?: string | null; durationMs?: number; stage?: SteamHostProbeResult["stage"] }
+      ? error.cause as { upstreamStatus?: number | null; contentType?: string | null; durationMs?: number; stage?: SteamHostProbeResult["stage"]; schemaIssues?: SteamHostProbeResult["schemaIssues"] }
       : null;
     return {
       host: new URL(baseUrl).host,
@@ -268,6 +279,7 @@ async function probeSteamCatalogHost(baseUrl: string, fetcher: typeof fetch, las
       accepted: false,
       reason: validationReason(error),
       stage: cause?.stage,
+      schemaIssues: cause?.schemaIssues,
     };
   }
 }
@@ -297,8 +309,8 @@ export async function validateSteamCatalogHosts(fetcher: typeof fetch = fetch) {
   return { publicHost, partnerHost };
 }
 
-export function validateSteamPublicCatalogPage(lastAppId: number, fetcher: typeof fetch = fetch) {
-  return probeSteamCatalogHost(STEAM_PUBLIC_WEB_API_BASE_URL, fetcher, lastAppId);
+export function validateSteamPublicCatalogPage(lastAppId: number, maxResults: number, fetcher: typeof fetch = fetch) {
+  return probeSteamCatalogHost(STEAM_PUBLIC_WEB_API_BASE_URL, fetcher, lastAppId, maxResults);
 }
 
 export class OfficialStoreServiceProvider implements SteamCatalogProvider {
