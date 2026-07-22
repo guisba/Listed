@@ -97,7 +97,8 @@ export function LandingPage({ games }: { games: LandingDemoGame[] }) {
                 <ol aria-label={t("landing.demo.ranking")} className="border-border lg:border-r">
                   {games.map((game, index) => (
                     <li key={game.appid}>
-                      <button type="button" onClick={() => setSelected(index)} className="group selection-rail grid w-full grid-cols-[1.7rem_5.6rem_1fr_auto] items-center gap-2.5 border-b border-border py-3 pl-3 pr-3 text-left transition-colors hover:bg-secondary/40 sm:grid-cols-[2rem_7.5rem_1fr_auto] sm:gap-3.5 sm:pl-4" data-active={selected === index} aria-label={t("landing.demo.vote", { game: game.name })} aria-pressed={selected === index}>
+                      <button type="button" onClick={() => setSelected(index)} className="group selection-rail grid w-full grid-cols-[1.7rem_5.6rem_1fr_auto] items-center gap-2.5 border-b border-border py-3 pl-3 pr-3 text-left transition-colors hover:bg-secondary/40 sm:grid-cols-[2rem_7.5rem_1fr_auto] sm:gap-3.5 sm:pl-4" data-active={selected === index} aria-pressed={selected === index}>
+                        <span className="sr-only">{t("landing.demo.vote", { game: game.name })}</span>
                         <span className="font-mono text-[10px] font-bold text-muted-foreground">0{index + 1}</span>
                         <span className="relative aspect-[92/43] overflow-hidden rounded-md bg-secondary sm:aspect-[120/45]"><GameArtwork game={game} priority={index === 0} /></span>
                         <span className="min-w-0"><strong className="block text-sm leading-5 sm:text-[15px]">{game.name}</strong><span className="mt-1 block font-mono text-[10px] text-muted-foreground">APPID {game.appid}{game.releaseYear ? ` · ${game.releaseYear}` : ""}</span></span>
@@ -110,14 +111,14 @@ export function LandingPage({ games }: { games: LandingDemoGame[] }) {
                 <aside className="flex min-h-48 flex-col bg-secondary/15 p-4 sm:p-5" aria-label={t("landing.demo.ownership")}>
                   <div className="flex items-start justify-between gap-3"><div><p className="listed-eyebrow">{t("landing.demo.pick")}</p><h3 className="mt-1.5 font-semibold">{selectedGame?.name}</h3></div><ClipboardCheck className="size-5 text-primary" /></div>
                   <p className="mt-2 text-xs leading-5 text-muted-foreground">{t("landing.demo.pickDescription")}</p>
-                  <div className="mt-5 grid grid-cols-5 gap-2" aria-label={t("landing.demo.ownerNames")}>
+                  <div className="mt-5 grid grid-cols-5 gap-2" role="group" aria-label={t("landing.demo.ownerNames")}>
                     {people.map((person, personIndex) => <span key={person} className={`grid aspect-square place-items-center rounded-full border font-mono text-[10px] font-bold ${ownership[selected]?.[personIndex] ? "border-success/40 bg-success/10 text-success" : "border-border bg-background text-muted-foreground"}`}>{ownership[selected]?.[personIndex] ? <Check className="size-3.5" /> : person}</span>)}
                   </div>
                   <div className="mt-auto pt-5 text-[11px] leading-5 text-muted-foreground">
                     <p>{selectedGame?.platforms.length ? selectedGame.platforms.join(" · ") : t("landing.demo.detailsUnavailable")}</p>
                     {selectedGame?.metadataAvailable ? <p>{plural("common.genre.one", "common.genre.other", selectedGame.genresCount)} · {plural("common.category.one", "common.category.other", selectedGame.categoriesCount)}</p> : null}
                   </div>
-                  {selectedGame ? <a href={selectedGame.storeUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-foreground underline decoration-border underline-offset-4 hover:decoration-primary" aria-label={t("landing.demo.steamLink", { game: selectedGame.name })}>{t("steam.open")} <ExternalLink className="size-3" /></a> : null}
+                  {selectedGame ? <a href={selectedGame.storeUrl} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 text-xs font-semibold text-foreground underline decoration-border underline-offset-4 hover:decoration-primary">{t("steam.open")} <ExternalLink className="size-3" /></a> : null}
                 </aside>
               </div>
               <div className="flex flex-col gap-2 border-t border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5"><p className="text-xs font-medium">{selected === 0 ? t("landing.demo.everyone") : t("landing.demo.pickDescription")}</p><p className="max-w-sm text-[10px] leading-4 text-muted-foreground">{t("landing.demo.realData")}</p></div>
