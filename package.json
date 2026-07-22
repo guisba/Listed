@@ -69,5 +69,10 @@
     "vitest": "4.1.10",
     "wrangler": "4.112.0"
   },
+  "overrides": {
+    "fast-uri": "3.1.4",
+    "postcss": "8.5.20",
+    "sharp": "0.35.3"
+  },
   "type": "module"
 }
