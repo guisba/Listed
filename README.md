@@ -6,7 +6,7 @@
 
 ## Estado do produto
 
-O MVP inclui landing page, criação e entrada em sessões temporárias, identidade anônima Supabase, código curto, sala em tempo real, jogos manuais, seletor Steam com autocomplete local e prévia server-side, votos, propriedade, filtros, sorteio simples ou ponderado, administração básica, três temas e persistência PostgreSQL com RLS.
+O MVP inclui landing page com demonstração baseada em jogos reais, criação e entrada em sessões temporárias, identidade anônima Supabase, código curto, sala em tempo real, jogos manuais, seletor Steam com autocomplete local e prévia server-side, votos, propriedade, filtros, sorteio simples ou ponderado, administração básica, três temas, pt-BR/en-US e persistência PostgreSQL com RLS.
 
 Grupos permanentes, OAuth, upgrade de conta e modos avançados já têm fundação no schema, mas continuam no roadmap. O catálogo Steam possui bootstrap e sync incremental oficiais; nenhum sync roda durante a pesquisa do usuário.
 
@@ -83,6 +83,12 @@ O provider oficial chama `GET https://api.steampowered.com/IStoreService/GetAppL
 
 Resultados são entregues em duas fases: texto e imagens já armazenadas chegam na busca inicial; somente as cápsulas visíveis ausentes são enriquecidas por `POST /api/steam/search/enrich`, em lote de até 12 e concorrência 3. O ranking combina relevância textual, tipo e popularidade limitada. Popularidade usa grupos/sessões e votos distintos do Listed e recomendações oficiais já obtidas no cache de detalhes; nunca bloqueia a pesquisa.
 
+## Idiomas e demonstração
+
+O idioma é resolvido no servidor pelo cookie validado `listed_locale`; na primeira visita, o `Accept-Language` mapeia português para `pt-BR` e demais idiomas para `en-US`. A troca no header atualiza o cookie e o Server Component atual sem alterar a rota nem o código de uma sessão. Metadados e `<html lang>` acompanham a seleção. Os dicionários internos tipados ficam em `i18n/` e a paridade de chaves é testada.
+
+A landing resolve no servidor os AppIDs 728880, 105600 e 730. Ela lê `steam_app_index` e o cache `catalog_games` com revalidação de 12 horas; não chama a Steam pelo browser, não cria usuário e não registra sessão, voto ou popularidade. Se o cache estiver incompleto, exibe somente nome oficial conhecido, AppID e o placeholder do Listed.
+
 ## Qualidade
 
 ```bash
@@ -114,6 +120,7 @@ O `vercel.json` usa `npm run build:vercel`. O comando `npm run build` produz o a
 app/                 rotas e handlers
 components/          UI, temas, jogos e sessões
 features/            regras de domínio e hooks
+i18n/                detecção, dicionários tipados e APIs server/client
 lib/                 Supabase, Steam, ambiente e validação
 supabase/             migrations, seed e testes RLS
 tests/                unitários, componentes e E2E

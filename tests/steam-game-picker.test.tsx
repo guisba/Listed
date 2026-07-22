@@ -1,6 +1,7 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SteamGamePicker } from "@/components/games/steam-game-picker";
+import { renderWithI18n } from "./i18n-render";
 
 vi.mock("next/image", () => ({ default: ({ src, alt }: { src: string; alt: string }) => <span data-testid="next-image" data-src={src} aria-label={alt} /> }));
 
@@ -30,7 +31,7 @@ describe("SteamGamePicker", () => {
       return new Response("not found", { status: 404 });
     });
     const onAdded = vi.fn();
-    render(<SteamGamePicker sessionId="11111111-1111-4111-8111-111111111111" onAdded={onAdded} onCancel={vi.fn()} onManualFallback={vi.fn()} />);
+    renderWithI18n(<SteamGamePicker sessionId="11111111-1111-4111-8111-111111111111" onAdded={onAdded} onCancel={vi.fn()} onManualFallback={vi.fn()} />);
 
     fireEvent.change(screen.getByRole("combobox"), { target: { value: "Terraria" } });
     expect(await screen.findByRole("option", { name: /Terraria/ })).toBeInTheDocument();
@@ -50,7 +51,7 @@ describe("SteamGamePicker", () => {
       if (url === "/api/steam/search/enrich") return new Response(JSON.stringify({ images: [{ appid: 400, capsuleImageUrl: "https://shared.akamai.steamstatic.com/portal.jpg", imageStatus: "available" }] }), { status: 200 });
       return new Response(JSON.stringify({ kind: "matches", catalog: { status: "complete", indexedGames: 175476, lastSyncAt: null }, pagination: { hasMore: false }, games: [{ appid: 400, name: "Portal", type: "game", id: null, headerImage: null, capsuleImageUrl: null, imageStatus: "unknown", releaseDate: null, platforms: [], relevance: 1500 }] }), { status: 200 });
     });
-    render(<SteamGamePicker sessionId="11111111-1111-4111-8111-111111111111" onAdded={vi.fn()} onCancel={vi.fn()} onManualFallback={vi.fn()} />);
+    renderWithI18n(<SteamGamePicker sessionId="11111111-1111-4111-8111-111111111111" onAdded={vi.fn()} onCancel={vi.fn()} onManualFallback={vi.fn()} />);
     fireEvent.change(screen.getByRole("combobox"), { target: { value: "Portal" } });
     expect(await screen.findByRole("option", { name: /Portal/ })).toBeInTheDocument();
     expect(await screen.findByLabelText("Cápsula de Portal")).toHaveAttribute("data-src", "https://shared.akamai.steamstatic.com/portal.jpg");

@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { SteamGamePreview, SteamSearchMatch } from "@/lib/steam/types";
+import { useI18n } from "@/i18n/client";
 
 interface Props {
   sessionId: string;
@@ -65,8 +66,9 @@ function HighlightedName({ name, query }: { name: string; query: string }) {
 }
 
 function ResultSkeletons() {
+  const { t } = useI18n();
   return (
-    <div aria-label="Buscando jogos" className="space-y-2 p-3">
+    <div aria-label={t("steam.searchingGames")} className="space-y-2 p-3">
       {Array.from({ length: 6 }, (_, index) => (
         <div key={index} className="flex h-[76px] animate-pulse gap-3 rounded-xl border border-border/60 p-2.5">
           <div className="h-12 w-[92px] shrink-0 rounded-lg bg-secondary" />
@@ -78,6 +80,7 @@ function ResultSkeletons() {
 }
 
 function ResultImage({ match }: { match: SteamSearchMatch }) {
+  const { t } = useI18n();
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   const imageUrl = failed ? null : match.capsuleImageUrl;
@@ -94,7 +97,7 @@ function ResultImage({ match }: { match: SteamSearchMatch }) {
       {!loaded ? <span aria-hidden="true" className="absolute inset-0 animate-pulse bg-secondary motion-reduce:animate-none" /> : null}
       <Image
         src={imageUrl}
-        alt={`Cápsula de ${match.name}`}
+        alt={t("steam.imageAlt", { game: match.name })}
         fill
         sizes="(max-width: 639px) 104px, 120px"
         loading="lazy"
@@ -107,24 +110,26 @@ function ResultImage({ match }: { match: SteamSearchMatch }) {
 }
 
 function CatalogNotice({ catalog }: { catalog: CatalogMetadata | null }) {
+  const { t } = useI18n();
   if (!catalog || catalog.status === "complete") return null;
   const message = catalog.status === "syncing" || catalog.status === "partial"
-    ? "O catálogo Steam ainda está sendo atualizado. Alguns jogos podem não aparecer."
+    ? t("steam.catalog.syncing")
     : catalog.status === "empty"
-      ? "O catálogo Steam ainda não foi sincronizado."
+      ? t("steam.catalog.empty")
       : catalog.status === "failed"
-        ? "A busca por nome está temporariamente limitada. Você ainda pode usar um AppID ou link da Steam."
-        : "O estado do catálogo Steam não está disponível. AppID e links oficiais continuam disponíveis.";
+        ? t("steam.catalog.failed")
+        : t("steam.catalog.unknown");
   return <p className="border-b border-border bg-amber-500/10 px-4 py-2.5 text-xs leading-5 text-amber-800 dark:text-amber-200">{message}</p>;
 }
 
 function FeatureSummary({ preview }: { preview: SteamGamePreview }) {
+  const { t } = useI18n();
   const labels: Record<string, string> = {
-    singleplayer: "Um jogador",
-    "coop-local": "Coop local",
-    "coop-online": "Coop online",
-    multiplayer: "Multiplayer",
-    "controller-support": "Controle",
+    singleplayer: t("steam.singleplayer"),
+    "coop-local": t("steam.coopLocal"),
+    "coop-online": t("steam.coopOnline"),
+    multiplayer: t("steam.multiplayer"),
+    "controller-support": t("steam.controller"),
   };
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -139,6 +144,7 @@ function FeatureSummary({ preview }: { preview: SteamGamePreview }) {
 }
 
 export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback }: Props) {
+  const { t } = useI18n();
   const listboxId = useId();
   const [query, setQuery] = useState("");
   const [matches, setMatches] = useState<SteamSearchMatch[]>([]);
@@ -166,7 +172,7 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
     try {
       const response = await fetch(`/api/steam/search?q=${encodeURIComponent(value)}&limit=12&offset=${offset}`, { signal });
       const payload = await response.json() as SearchPayload;
-      if (!response.ok) throw new Error(payload.error ?? "Busca Steam indisponível.");
+      if (!response.ok) throw new Error("search_failed");
       if (sequence !== requestSequence.current) return;
       setCatalog(payload.catalog ?? null);
       const games = payload.games ?? [];
@@ -179,7 +185,7 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
         setMatches((current) => offset > 0 ? [...current, ...nextMatches] : nextMatches);
         setActiveIndex(nextMatches.length && offset === 0 ? 0 : -1);
         setHasMore(Boolean(payload.pagination?.hasMore));
-        if (!nextMatches.length && offset === 0) setStatus("Nenhum jogo encontrado no índice Steam disponível.");
+        if (!nextMatches.length && offset === 0) setStatus(t("steam.noResults"));
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") return;
@@ -188,14 +194,14 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
         setMatches([]);
         setPreview(null);
       }
-      setStatus(error instanceof Error ? error.message : "Erro ao pesquisar na Steam.");
+      setStatus(t("steam.error"));
     } finally {
       if (sequence === requestSequence.current) {
         setLoading(false);
         setLoadingMore(false);
       }
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     controller.current?.abort();
@@ -308,11 +314,10 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId, appid: preview.appid }),
       });
-      const payload = await response.json() as { error?: string };
-      if (!response.ok) throw new Error(payload.error ?? "Não foi possível adicionar o jogo.");
+      if (!response.ok) throw new Error("add_failed");
       onAdded();
-    } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Não foi possível adicionar o jogo.");
+    } catch {
+      setStatus(t("steam.addError"));
     } finally {
       setAdding(false);
     }
@@ -338,7 +343,7 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
   }
 
   const searchPanel = (
-    <section className={`${preview ? "hidden md:flex" : "flex"} min-h-0 flex-col border-border md:border-r`} aria-label="Resultados da pesquisa Steam">
+    <section className={`${preview ? "hidden md:flex" : "flex"} min-h-0 flex-col border-border md:border-r`} aria-label={t("steam.searchResults")}>
       <div className="shrink-0 border-b border-border p-4">
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-3.5 size-4 text-muted-foreground" />
@@ -346,16 +351,16 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
             value={query}
             onChange={(event) => updateQuery(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Nome, AppID ou link da Steam"
+            placeholder={t("steam.searchPlaceholder")}
             className="pl-9 pr-10"
             role="combobox"
-            aria-label="Buscar jogo na Steam"
+            aria-label={t("steam.searchLabel")}
             aria-autocomplete="list"
             aria-expanded={matches.length > 0}
             aria-controls={listboxId}
             aria-activedescendant={activeIndex >= 0 ? `${listboxId}-${activeIndex}` : undefined}
           />
-          {loading ? <LoaderCircle className="absolute right-3 top-3.5 size-4 animate-spin text-primary" aria-label="Buscando" /> : null}
+          {loading ? <LoaderCircle className="absolute right-3 top-3.5 size-4 animate-spin text-primary" aria-label={t("steam.searching")} /> : null}
         </div>
       </div>
       <CatalogNotice catalog={catalog} />
@@ -379,18 +384,18 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
                   <span className="block text-sm font-semibold leading-5"><HighlightedName name={match.name} query={query} /></span>
                   <span className="mt-1 flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
                     <span>AppID {match.appid}</span>
-                    <span>{match.releaseDate?.match(/\d{4}/)?.[0] ?? (match.type === "unknown" ? "Tipo será confirmado ao abrir a prévia" : "Jogo")}</span>
+                    <span>{match.releaseDate?.match(/\d{4}/)?.[0] ?? (match.type === "unknown" ? t("steam.typePending") : t("common.game"))}</span>
                     {match.platforms.slice(0, 2).map((platform) => <span key={platform}>{platform}</span>)}
                   </span>
                 </span>
                 <Check className={`size-4 shrink-0 text-primary ${preview?.appid === match.appid || index === activeIndex ? "opacity-100" : "opacity-0"}`} />
               </button>
             ))}
-            {hasMore ? <Button type="button" variant="secondary" className="w-full" disabled={loadingMore} onClick={() => void requestGames(query, undefined, matches.length)}>{loadingMore ? <LoaderCircle className="size-4 animate-spin" /> : null} Carregar mais</Button> : null}
+            {hasMore ? <Button type="button" variant="secondary" className="w-full" disabled={loadingMore} onClick={() => void requestGames(query, undefined, matches.length)}>{loadingMore ? <LoaderCircle className="size-4 animate-spin" /> : null} {t("steam.loadMore")}</Button> : null}
           </div>
         ) : (
           <div className="grid min-h-56 place-items-center px-6 text-center">
-            <div><PackageSearch className="mx-auto size-8 text-muted-foreground" /><p className="mt-3 text-sm font-semibold">{status ?? "Digite ao menos 2 caracteres"}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">A busca consulta o índice Steam no servidor. AppIDs e links oficiais funcionam mesmo antes do catálogo terminar.</p></div>
+            <div><PackageSearch className="mx-auto size-8 text-muted-foreground" /><p className="mt-3 text-sm font-semibold">{status ?? t("steam.minChars")}</p><p className="mt-1 text-xs leading-5 text-muted-foreground">{t("steam.searchHelp")}</p></div>
           </div>
         )}
       </div>
@@ -398,45 +403,45 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
   );
 
   const previewPanel = (
-    <section className={`${preview ? "flex" : "hidden md:flex"} min-h-0 flex-col bg-secondary/20`} aria-label="Prévia do jogo Steam">
+    <section className={`${preview ? "flex" : "hidden md:flex"} min-h-0 flex-col bg-secondary/20`} aria-label={t("steam.previewLabel")}>
       {preview ? (
         <>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-            <button type="button" onClick={() => setPreview(null)} className="m-4 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground md:hidden"><ArrowLeft className="size-4" /> Voltar aos resultados</button>
+            <button type="button" onClick={() => setPreview(null)} className="m-4 inline-flex items-center gap-2 text-sm font-semibold text-muted-foreground md:hidden"><ArrowLeft className="size-4" /> {t("steam.backResults")}</button>
             <div className="px-4 pb-5 pt-0 md:p-5">
               <article className="overflow-hidden rounded-2xl border border-border bg-card">
-                {preview.headerImage ? <Image src={preview.headerImage} alt={`Imagem principal de ${preview.name}`} width={920} height={430} className="aspect-[2.15/1] w-full bg-secondary object-cover" priority sizes="(min-width: 768px) 58vw, 100vw" /> : <div className="grid aspect-[2.15/1] place-items-center bg-secondary"><PackageSearch className="size-10 text-muted-foreground" /></div>}
+                {preview.headerImage ? <Image src={preview.headerImage} alt={t("steam.heroAlt", { game: preview.name })} width={920} height={430} className="aspect-[2.15/1] w-full bg-secondary object-cover" priority sizes="(min-width: 768px) 58vw, 100vw" /> : <div className="grid aspect-[2.15/1] place-items-center bg-secondary"><PackageSearch className="size-10 text-muted-foreground" /></div>}
                 <div className="space-y-5 p-5">
                   <div>
-                    <p className="listed-eyebrow text-primary">Prévia Steam</p>
+                    <p className="listed-eyebrow text-primary">{t("steam.preview")}</p>
                     <h3 className="mt-1 text-2xl font-semibold tracking-[-.03em]">{preview.name}</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">AppID {preview.appid} · {preview.type}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">AppID {preview.appid} · {t("common.game")}</p>
                   </div>
                   {preview.shortDescription ? <p className="text-sm leading-6 text-muted-foreground">{preview.shortDescription}</p> : null}
-                  {preview.fullDescription && preview.fullDescription !== preview.shortDescription ? <details className="rounded-xl border border-border p-3 text-sm text-muted-foreground"><summary className="cursor-pointer font-semibold text-foreground">Descrição completa</summary><p className="mt-3 leading-6">{preview.fullDescription}</p></details> : null}
+                  {preview.fullDescription && preview.fullDescription !== preview.shortDescription ? <details className="rounded-xl border border-border p-3 text-sm text-muted-foreground"><summary className="cursor-pointer font-semibold text-foreground">{t("steam.fullDescription")}</summary><p className="mt-3 leading-6">{preview.fullDescription}</p></details> : null}
                   <dl className="grid gap-3 text-sm sm:grid-cols-2">
-                    <div className="rounded-xl bg-secondary/70 p-3"><dt className="flex items-center gap-2 text-xs text-muted-foreground"><CalendarDays className="size-3.5" /> Lançamento</dt><dd className="mt-1.5 font-semibold">{preview.comingSoon ? "Em breve" : preview.releaseDate ?? "Não informado"}</dd></div>
-                    <div className="rounded-xl bg-secondary/70 p-3"><dt className="text-xs text-muted-foreground">Preço</dt><dd className="mt-1.5 font-semibold">{preview.isFree ? "Gratuito" : preview.price?.formatted ?? "Consulte na Steam"}</dd></div>
-                    <div className="rounded-xl bg-secondary/70 p-3"><dt className="text-xs text-muted-foreground">Desenvolvedora</dt><dd className="mt-1.5 font-semibold">{preview.developers.join(", ") || "Não informado"}</dd></div>
-                    <div className="rounded-xl bg-secondary/70 p-3"><dt className="text-xs text-muted-foreground">Distribuidora</dt><dd className="mt-1.5 font-semibold">{preview.publishers.join(", ") || "Não informado"}</dd></div>
+                    <div className="rounded-xl bg-secondary/70 p-3"><dt className="flex items-center gap-2 text-xs text-muted-foreground"><CalendarDays className="size-3.5" /> {t("steam.release")}</dt><dd className="mt-1.5 font-semibold">{preview.comingSoon ? t("steam.comingSoon") : preview.releaseDate ?? t("common.notInformed")}</dd></div>
+                    <div className="rounded-xl bg-secondary/70 p-3"><dt className="text-xs text-muted-foreground">{t("steam.price")}</dt><dd className="mt-1.5 font-semibold">{preview.isFree ? t("ownership.free") : preview.price?.formatted ?? t("steam.checkPrice")}</dd></div>
+                    <div className="rounded-xl bg-secondary/70 p-3"><dt className="text-xs text-muted-foreground">{t("steam.developer")}</dt><dd className="mt-1.5 font-semibold">{preview.developers.join(", ") || t("common.notInformed")}</dd></div>
+                    <div className="rounded-xl bg-secondary/70 p-3"><dt className="text-xs text-muted-foreground">{t("steam.publisher")}</dt><dd className="mt-1.5 font-semibold">{preview.publishers.join(", ") || t("common.notInformed")}</dd></div>
                   </dl>
                   <FeatureSummary preview={preview} />
-                  {[{ label: "Plataformas", values: preview.platforms }, { label: "Gêneros", values: preview.genres }, { label: "Categorias", values: preview.categories }].map((section) => section.values.length ? (
+                  {[{ label: t("steam.platforms"), values: preview.platforms }, { label: t("steam.genres"), values: preview.genres }, { label: t("steam.categories"), values: preview.categories }].map((section) => section.values.length ? (
                     <Fragment key={section.label}><div className="h-px bg-border" /><div><h4 className="text-xs font-semibold uppercase tracking-[.12em] text-muted-foreground">{section.label}</h4><div className="mt-2 flex flex-wrap gap-1.5">{section.values.slice(0, 18).map((item) => <Badge key={item}>{item}</Badge>)}</div></div></Fragment>
                   ) : null)}
-                  {preview.warning ? <p className="flex items-start gap-2 rounded-lg bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300"><AlertTriangle className="mt-.5 size-4 shrink-0" />{preview.warning}</p> : null}
+                  {preview.warning ? <p className="flex items-start gap-2 rounded-lg bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300"><AlertTriangle className="mt-.5 size-4 shrink-0" />{t("steam.unavailable")}</p> : null}
                 </div>
               </article>
             </div>
           </div>
           <footer className="grid shrink-0 grid-cols-1 gap-2 border-t border-border bg-card p-4 sm:grid-cols-3">
-            <Button type="button" variant="ghost" onClick={onCancel}>Cancelar</Button>
-            <Button asChild variant="secondary"><a href={preview.storeUrl} target="_blank" rel="noreferrer">Abrir na Steam <ExternalLink className="size-4" /></a></Button>
-            <Button type="button" onClick={() => void addGame()} disabled={adding}>{adding ? <LoaderCircle className="size-4 animate-spin" /> : <Plus className="size-4" />} Adicionar à lista</Button>
+            <Button type="button" variant="ghost" onClick={onCancel}>{t("common.cancel")}</Button>
+            <Button asChild variant="secondary"><a href={preview.storeUrl} target="_blank" rel="noreferrer">{t("steam.open")} <ExternalLink className="size-4" /></a></Button>
+            <Button type="button" onClick={() => void addGame()} disabled={adding}>{adding ? <LoaderCircle className="size-4 animate-spin" /> : <Plus className="size-4" />} {t("add.title")}</Button>
           </footer>
         </>
       ) : (
-        <div className="grid h-full place-items-center p-8 text-center"><div><PackageSearch className="mx-auto size-10 text-muted-foreground" /><h3 className="mt-4 font-semibold">Selecione um jogo</h3><p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">A prévia completa aparecerá aqui sem substituir a lista de resultados.</p></div></div>
+        <div className="grid h-full place-items-center p-8 text-center"><div><PackageSearch className="mx-auto size-10 text-muted-foreground" /><h3 className="mt-4 font-semibold">{t("steam.select")}</h3><p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">{t("steam.selectDescription")}</p></div></div>
       )}
     </section>
   );
@@ -447,8 +452,8 @@ export function SteamGamePicker({ sessionId, onAdded, onCancel, onManualFallback
         {searchPanel}
         {previewPanel}
       </div>
-      {status && matches.length > 0 ? <div role="alert" className="shrink-0 border-t border-border bg-destructive/10 px-4 py-2.5 text-sm text-destructive">{status}<button type="button" onClick={onManualFallback} className="ml-1 font-semibold underline">Adicionar manualmente</button></div> : null}
-      {!preview ? <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-border bg-card p-4 md:hidden"><Button type="button" variant="ghost" onClick={onCancel}>Cancelar</Button><Button type="button" variant="secondary" onClick={onManualFallback}>Adicionar manualmente</Button></footer> : null}
+      {status && matches.length > 0 ? <div role="alert" className="shrink-0 border-t border-border bg-destructive/10 px-4 py-2.5 text-sm text-destructive">{status}<button type="button" onClick={onManualFallback} className="ml-1 font-semibold underline">{t("add.manualAction")}</button></div> : null}
+      {!preview ? <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-border bg-card p-4 md:hidden"><Button type="button" variant="ghost" onClick={onCancel}>{t("common.cancel")}</Button><Button type="button" variant="secondary" onClick={onManualFallback}>{t("add.manualAction")}</Button></footer> : null}
     </div>
   );
 }

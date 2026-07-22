@@ -4,8 +4,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { ensureAnonymousUser, getBrowserSupabase } from "@/lib/supabase/browser";
 import type { OwnershipStatus, SessionGame, SessionMember, SessionSummary } from "@/types/domain";
+import { useI18n } from "@/i18n/client";
 
 export function useRoomData(code: string) {
+  const { t } = useI18n();
   const router = useRouter();
   const [session, setSession] = useState<SessionSummary | null>(null);
   const [members, setMembers] = useState<SessionMember[]>([]);
@@ -17,7 +19,7 @@ export function useRoomData(code: string) {
 
   const load = useCallback(async () => {
     const supabase = getBrowserSupabase();
-    if (!supabase) { setError("Supabase não configurado. Consulte o guia de instalação."); setLoading(false); return; }
+    if (!supabase) { setError(t("room.errorDescription")); setLoading(false); return; }
     try {
       const user = await ensureAnonymousUser();
       setUserId(user.id);
@@ -42,9 +44,9 @@ export function useRoomData(code: string) {
         ownership_status: (ownership.find((item) => item.session_game_id === game.id && item.user_id === user.id)?.status ?? "unknown") as OwnershipStatus,
       })) as SessionGame[];
       setSession(sessionData as SessionSummary); setMembers((memberResult.data ?? []) as SessionMember[]); setGames(enriched); setError(null);
-    } catch (caught) { setError(caught instanceof Error ? caught.message : "Não foi possível carregar a sessão."); }
+    } catch { setError(t("room.errorDescription")); }
     finally { setLoading(false); }
-  }, [code, router]);
+  }, [code, router, t]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void load(), 0);

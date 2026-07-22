@@ -5,15 +5,17 @@ import { Check, Contrast, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { getBrowserSupabase } from "@/lib/supabase/browser";
+import { useI18n } from "@/i18n/client";
 
 const options = [
-  { value: "light", label: "Claro", icon: Sun },
-  { value: "dark", label: "Escuro", icon: Moon },
-  { value: "dark-red", label: "Escuro vermelho", icon: Contrast },
+  { value: "light", label: "theme.light", icon: Sun },
+  { value: "dark", label: "theme.dark", icon: Moon },
+  { value: "dark-red", label: "theme.darkRed", icon: Contrast },
 ] as const;
 
 export function ThemeSwitcher() {
   const { theme, setTheme } = useTheme();
+  const { t } = useI18n();
 
   async function chooseTheme(value: (typeof options)[number]["value"]) {
     setTheme(value);
@@ -26,7 +28,7 @@ export function ThemeSwitcher() {
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Escolher tema">
+        <Button variant="ghost" size="icon" aria-label={t("theme.choose")}>
           <Contrast className="size-4" />
         </Button>
       </DropdownMenu.Trigger>
@@ -41,7 +43,7 @@ export function ThemeSwitcher() {
                 className="flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm outline-none transition-colors hover:bg-accent focus:bg-accent"
               >
                 <Icon className="size-4" />
-                <span className="flex-1">{option.label}</span>
+                <span className="flex-1">{t(option.label)}</span>
                 {theme === option.value ? <Check className="size-4 text-primary" /> : null}
               </DropdownMenu.Item>
             );

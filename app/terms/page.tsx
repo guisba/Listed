@@ -1,5 +1,10 @@
 import { LegalPage } from "@/components/legal/legal-page";
+import { getServerI18n } from "@/i18n/server";
+import type { Metadata } from "next";
 
-export default function TermsPage() {
-  return <LegalPage title="Termos de uso" intro="Use a plataforma para organizar sua galera com respeito e sem abusar dos serviços externos."><section><h2 className="text-xl font-bold text-foreground">Uso aceitável</h2><p className="mt-2">Não tente enumerar sessões, enviar conteúdo malicioso, automatizar spam, contornar limites ou usar integrações de forma contrária aos termos dos provedores.</p></section><section><h2 className="text-xl font-bold text-foreground">Conteúdo</h2><p className="mt-2">Você é responsável pelos nomes, links, imagens e observações incluídos manualmente. Dados externos podem ficar incompletos ou desatualizados.</p></section><section><h2 className="text-xl font-bold text-foreground">Disponibilidade</h2><p className="mt-2">Sessões rápidas expiram. Integrações opcionais podem ser desativadas quando indisponíveis sem impedir o uso de jogos manuais.</p></section></LegalPage>;
+export async function generateMetadata(): Promise<Metadata> { const { t } = await getServerI18n(); return { title: t("terms.meta") }; }
+
+export default async function TermsPage() {
+  const { t } = await getServerI18n();
+  return <LegalPage title={t("terms.title")} intro={t("terms.intro")}><section><h2 className="text-xl font-bold text-foreground">{t("terms.acceptable.title")}</h2><p className="mt-2">{t("terms.acceptable.text")}</p></section><section><h2 className="text-xl font-bold text-foreground">{t("terms.content.title")}</h2><p className="mt-2">{t("terms.content.text")}</p></section><section><h2 className="text-xl font-bold text-foreground">{t("terms.availability.title")}</h2><p className="mt-2">{t("terms.availability.text")}</p></section></LegalPage>;
 }
