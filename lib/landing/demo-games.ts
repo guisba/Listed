@@ -64,7 +64,7 @@ const readLandingDemoGames = unstable_cache(async () => {
   ]);
   if (indexResult.error || catalogResult.error) return buildLandingDemoGames(indexResult.data ?? [], catalogResult.data ?? []);
   return buildLandingDemoGames(indexResult.data ?? [], catalogResult.data ?? []);
-}, ["landing-demo-games-v1"], { revalidate: 60 * 60 * 12, tags: ["landing-demo-games"] });
+}, ["landing-demo-games-v2"], { revalidate: 60 * 60 * 12, tags: ["landing-demo-games"] });
 
 export async function getLandingDemoGames() {
   return readLandingDemoGames();
