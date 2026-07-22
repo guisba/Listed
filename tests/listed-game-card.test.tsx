@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ListedGameCard } from "@/components/games/game-card";
+import { renderWithI18n } from "./i18n-render";
 import type { SessionGame } from "@/types/domain";
 
 const longName = "Um jogo cooperativo com um nome propositalmente muito longo para validar a composição";
@@ -14,14 +15,14 @@ const game: SessionGame = {
 
 describe("ListedGameCard", () => {
   it("mantém nome longo e fallback de imagem acessíveis", () => {
-    render(<ListedGameCard game={game} rank={1} onVote={vi.fn().mockResolvedValue(true)} onOwnership={vi.fn().mockResolvedValue(true)} />);
+    renderWithI18n(<ListedGameCard game={game} rank={1} onVote={vi.fn().mockResolvedValue(true)} onOwnership={vi.fn().mockResolvedValue(true)} />);
     expect(screen.getByRole("heading", { name: longName })).toBeInTheDocument();
     expect(screen.getByText("Imagem indisponível")).toBeInTheDocument();
   });
 
   it("aplica voto otimista e reverte quando a gravação falha", async () => {
     const user = userEvent.setup();
-    render(<ListedGameCard game={game} rank={2} onVote={vi.fn().mockResolvedValue(false)} onOwnership={vi.fn().mockResolvedValue(true)} />);
+    renderWithI18n(<ListedGameCard game={game} rank={2} onVote={vi.fn().mockResolvedValue(false)} onOwnership={vi.fn().mockResolvedValue(true)} />);
     const button = screen.getAllByRole("button", { name: /Votar\s*2/ }).at(-1)!;
     await user.click(button);
     expect(screen.getAllByRole("button", { name: /Votar\s*2/ }).at(-1)).toHaveAttribute("aria-pressed", "false");

@@ -139,6 +139,9 @@ button, a { touch-action: manipulation; }
 ::selection { background: color-mix(in srgb, var(--primary) 28%, transparent); }
 :focus-visible { outline: 2px solid var(--ring); outline-offset: 3px; }
 
+.skip-link { position: fixed; top: .5rem; left: .5rem; z-index: 100; transform: translateY(-160%); border-radius: var(--radius-sm); background: var(--foreground); color: var(--background); padding: .65rem 1rem; font-weight: 700; transition: transform var(--duration-fast) var(--ease-standard); }
+.skip-link:focus { transform: translateY(0); }
+
 .listed-surface { box-shadow: 0 18px 45px -36px rgb(var(--shadow-color) / .5); }
 .listed-eyebrow { font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted-foreground); }
 .listed-rule { border-top: 1px solid var(--border); }
@@ -156,8 +159,16 @@ button, a { touch-action: manipulation; }
 .selection-rail[data-active="true"]::before { background: var(--primary); }
 .selection-rail:has(input:checked)::before { background: var(--primary); }
 
+.landing-stage { background: radial-gradient(circle at 20% 20%, color-mix(in srgb, var(--primary) 9%, transparent), transparent 32%), var(--background); }
+.landing-grid { opacity: .34; background-image: linear-gradient(color-mix(in srgb, var(--border) 55%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--border) 55%, transparent) 1px, transparent 1px); background-size: 3.5rem 3.5rem; mask-image: linear-gradient(to right, black, transparent 80%); }
+.landing-orbit { width: 24rem; aspect-ratio: 1; border: 1px solid color-mix(in srgb, var(--primary) 18%, transparent); border-radius: 50%; animation: landing-drift 12s ease-in-out infinite alternate; }
+.landing-orbit-one { right: -8rem; top: 8%; }
+.landing-orbit-two { right: 26%; bottom: -16rem; width: 34rem; animation-delay: -5s; }
+.landing-console { box-shadow: 0 42px 90px -56px rgb(var(--shadow-color) / .8), 0 0 0 1px color-mix(in srgb, var(--foreground) 4%, transparent); }
+
 @keyframes listed-enter { from { opacity: 0; transform: translateY(.55rem); } to { opacity: 1; transform: translateY(0); } }
 @keyframes listed-pulse { 0%, 100% { box-shadow: 0 0 0 0 transparent; } 40% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--primary) 18%, transparent); } }
+@keyframes landing-drift { from { transform: translate3d(0, 0, 0) rotate(0); } to { transform: translate3d(-2rem, 1rem, 0) rotate(8deg); } }
 
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0; }
 

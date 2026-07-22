@@ -14,8 +14,8 @@ describe("Steam catalog dialog layout", () => {
 
   it("mantém resultados e prévia em colunas adaptáveis", () => {
     expect(picker).toContain("md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]");
-    expect(picker).toContain("Voltar aos resultados");
-    expect(picker).toContain("Carregar mais");
+    expect(picker).toContain('t("steam.backResults")');
+    expect(picker).toContain('t("steam.loadMore")');
   });
 
   it("não contém catálogo popular fixo no runtime", () => {

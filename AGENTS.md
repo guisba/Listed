@@ -14,6 +14,7 @@
 - Server Components são o padrão; mova `use client` para a folha interativa.
 - SDKs server-only devem ser inicializados de forma lazy, nunca no topo com secrets obrigatórios.
 - Use tokens semânticos de `app/globals.css`; os três temas precisam continuar equivalentes.
+- Todo texto visível novo deve usar os dicionários tipados de `i18n/`; preserve `pt-BR`, `en-US`, o cookie `listed_locale` e a rota sem prefixo.
 - Preserve o App Router e os dois builds. `vercel.json` seleciona o build Next; Sites usa o script padrão.
 - Não use barrel files em diretórios grandes.
 

@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { RoomClient } from "@/components/sessions/room-client";
+import { getServerI18n } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ code: string }> }): Promise<Metadata> {
   const { code } = await params;
-  return { title: `Sessão ${code}`, robots: { index: false, follow: false } };
+  const { t } = await getServerI18n();
+  return { title: t("session.meta", { code }), robots: { index: false, follow: false } };
 }
 
 export default async function SessionPage({ params }: { params: Promise<{ code: string }> }) {
