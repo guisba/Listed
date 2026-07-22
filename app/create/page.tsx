@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { CreateSessionForm } from "@/components/sessions/create-session-form";
 import { FormShell } from "@/components/layout/form-shell";
+import { getServerI18n } from "@/i18n/server";
 
-export const metadata: Metadata = { title: "Criar sessão" };
+export async function generateMetadata(): Promise<Metadata> { const { t } = await getServerI18n(); return { title: t("create.meta") }; }
 
-export default function CreatePage() {
-  return <FormShell eyebrow="Nova lista" title="Comece pela pergunta certa: o que está em jogo?" description="Dê um nome à lista, escolha como o grupo decide e compartilhe o código. Leva menos de um minuto." wide><CreateSessionForm /></FormShell>;
+export default async function CreatePage() {
+  const { t } = await getServerI18n();
+  return <FormShell eyebrow={t("create.eyebrow")} title={t("create.title")} description={t("create.description")} wide><CreateSessionForm /></FormShell>;
 }
