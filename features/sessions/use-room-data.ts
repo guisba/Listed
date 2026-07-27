@@ -114,6 +114,8 @@ export function useRoomData(code: string) {
       const state = (data as { state?: string } | null)?.state;
       if (state === "removed" || state === "banned") {
         router.replace(`/?sessionAccess=${state}`);
+      } else if (state === "member") {
+        await load();
       }
     };
     const interval = window.setInterval(() => void checkAccess(), 5_000);
@@ -126,7 +128,7 @@ export function useRoomData(code: string) {
       window.clearInterval(interval);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [code, router, session, userId]);
+  }, [code, load, router, session, userId]);
 
   return { session, members, games, userId, onlineUserIds, settings, bans, auditLogs, loading, error, reload: load };
 }

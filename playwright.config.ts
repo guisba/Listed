@@ -1,6 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const storageState = process.env.PLAYWRIGHT_STORAGE_STATE;
+const executablePath = process.env.PLAYWRIGHT_EXECUTABLE_PATH;
+const localLaunchOptions = executablePath ? { launchOptions: { executablePath } } : {};
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -15,8 +17,8 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "mobile", use: { ...devices["Pixel 7"] } },
+    { name: "chromium", use: { ...devices["Desktop Chrome"], ...localLaunchOptions } },
+    { name: "mobile", use: { ...devices["Pixel 7"], ...localLaunchOptions } },
   ],
   webServer: process.env.PLAYWRIGHT_BASE_URL
     ? undefined

@@ -112,9 +112,9 @@ test("owner, co-owner e member cumprem promoção, permissões, kick, ban, unban
 
     await admin.getByRole("tab", { name: "Permissões" }).click();
     await admin.getByLabel("Quem pode adicionar jogos?").selectOption("owner");
-    await admin.getByLabel("Co-owner pode expulsar membros").check({ force: true });
-    await admin.getByLabel("Co-owner pode banir membros").check({ force: true });
-    await admin.getByLabel("Co-owner pode bloquear votação").check({ force: true });
+    await admin.getByText("Co-owner pode expulsar membros", { exact: true }).click();
+    await admin.getByText("Co-owner pode banir membros", { exact: true }).click();
+    await admin.getByText("Co-owner pode bloquear votação", { exact: true }).click();
     await admin.getByLabel("Máximo de votos por membro").fill("2");
     await capture(owner, "03-permission-settings");
     await admin.getByRole("button", { name: "Salvar configurações" }).click();
@@ -157,6 +157,7 @@ test("owner, co-owner e member cumprem promoção, permissões, kick, ban, unban
     await coOwner.getByRole("button", { name: "Gerenciar sessão" }).click();
     const coAdmin = coOwner.getByRole("dialog", { name: "Gerenciar sessão" });
     await expect(coAdmin.getByRole("button", { name: "Transferir propriedade" })).toHaveCount(0);
+    await coAdmin.getByRole("tab", { name: "Permissões" }).click();
     await expect(coAdmin.getByLabel("Quem pode adicionar jogos?")).toBeDisabled();
     await capture(coOwner, "04-coowner-active");
     await coAdmin.getByRole("tab", { name: "Membros" }).click();
