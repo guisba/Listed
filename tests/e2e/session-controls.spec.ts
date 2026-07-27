@@ -117,19 +117,18 @@ test("owner, co-owner e member cumprem promoção, permissões, kick, ban, unban
     await admin.getByText("Co-owner pode bloquear votação", { exact: true }).click();
     await admin.getByLabel("Máximo de votos por membro").fill("2");
     await capture(owner, "03-permission-settings");
-    await admin.getByRole("button", { name: "Salvar configurações" }).click();
-    await expect(owner.getByText("Configurações salvas")).toBeVisible();
-    await owner.keyboard.press("Escape");
-
-    await expect(member.getByRole("button", { name: "Adicionar jogo" })).toBeDisabled({ timeout: 20_000 });
     const sessionResponsePromise = owner.waitForResponse((response) =>
       response.url().includes("/rest/v1/sessions?") && response.request().method() === "GET",
     );
-    await owner.reload();
+    await admin.getByRole("button", { name: "Salvar configurações" }).click();
     const sessionResponse = await sessionResponsePromise;
     const sessionRows = await sessionResponse.json() as Array<{ id: string }>;
     const sessionId = sessionRows[0]?.id;
     expect(sessionId).toBeTruthy();
+    await expect(owner.getByText("Configurações salvas")).toBeVisible();
+    await owner.keyboard.press("Escape");
+
+    await expect(member.getByRole("button", { name: "Adicionar jogo" })).toBeDisabled({ timeout: 20_000 });
     const bypassStatus = await member.evaluate(async ({ targetSessionId }) => {
       const response = await fetch("/api/steam/session-game", {
         method: "POST",

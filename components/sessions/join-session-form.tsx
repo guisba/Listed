@@ -31,7 +31,11 @@ export function JoinSessionForm({ initialCode = "" }: { initialCode?: string }) 
       const result = data as { public_code: string };
       router.push(`/s/${result.public_code}`);
     } catch (caught) {
-      const message = caught instanceof Error ? caught.message : "";
+      const message = caught instanceof Error
+        ? caught.message
+        : typeof caught === "object" && caught !== null && "message" in caught && typeof caught.message === "string"
+          ? caught.message
+          : "";
       setError(t(message.includes("Acesso bloqueado") ? "join.banned" : "join.error"));
       setIsLoading(false);
     }
