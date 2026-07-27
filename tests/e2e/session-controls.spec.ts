@@ -59,10 +59,11 @@ test("owner, co-owner e member recebem poderes e remoção em tempo real", async
   test.setTimeout(120_000);
   test.skip(testInfo.project.name !== "chromium", "A matriz multi-identidade roda uma vez no projeto desktop.");
   const baseURL = testInfo.project.use.baseURL as string;
+  const storageState = testInfo.project.use.storageState as string | undefined;
   const suffix = `${Date.now()}`.slice(-7);
-  const ownerContext = await browser.newContext({ baseURL, locale: "pt-BR" });
-  const coOwnerContext = await browser.newContext({ baseURL, locale: "pt-BR" });
-  const memberContext = await browser.newContext({ baseURL, locale: "pt-BR" });
+  const ownerContext = await browser.newContext({ baseURL, locale: "pt-BR", storageState });
+  const coOwnerContext = await browser.newContext({ baseURL, locale: "pt-BR", storageState });
+  const memberContext = await browser.newContext({ baseURL, locale: "pt-BR", storageState });
   const owner = await ownerContext.newPage();
   const coOwner = await coOwnerContext.newPage();
   const member = await memberContext.newPage();

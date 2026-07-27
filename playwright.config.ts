@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const storageState = process.env.PLAYWRIGHT_STORAGE_STATE;
+
 export default defineConfig({
   testDir: "./tests/e2e",
   // Session tests share the local Supabase rate limiter; keep mutations deterministic.
@@ -9,6 +11,7 @@ export default defineConfig({
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000",
     locale: "pt-BR",
+    ...(storageState ? { storageState } : {}),
     trace: "on-first-retry",
   },
   projects: [
