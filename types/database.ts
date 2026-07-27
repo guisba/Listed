@@ -480,6 +480,50 @@ export type Database = {
           },
         ]
       }
+      session_bans: {
+        Row: {
+          banned_by: string
+          created_at: string
+          display_name: string
+          id: string
+          reason: string | null
+          revoked_at: string | null
+          revoked_by: string | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          banned_by: string
+          created_at?: string
+          display_name: string
+          id?: string
+          reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          banned_by?: string
+          created_at?: string
+          display_name?: string
+          id?: string
+          reason?: string | null
+          revoked_at?: string | null
+          revoked_by?: string | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_bans_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       session_invites: {
         Row: {
           code: string
@@ -554,6 +598,50 @@ export type Database = {
             foreignKeyName: "session_members_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_settings: {
+        Row: {
+          coowners_can_manage_games: boolean
+          coowners_can_manage_members: boolean
+          coowners_can_manage_settings: boolean
+          created_at: string
+          games_locked: boolean
+          members_can_add_games: boolean
+          session_id: string
+          updated_at: string
+          voting_locked: boolean
+        }
+        Insert: {
+          coowners_can_manage_games?: boolean
+          coowners_can_manage_members?: boolean
+          coowners_can_manage_settings?: boolean
+          created_at?: string
+          games_locked?: boolean
+          members_can_add_games?: boolean
+          session_id: string
+          updated_at?: string
+          voting_locked?: boolean
+        }
+        Update: {
+          coowners_can_manage_games?: boolean
+          coowners_can_manage_members?: boolean
+          coowners_can_manage_settings?: boolean
+          created_at?: string
+          games_locked?: boolean
+          members_can_add_games?: boolean
+          session_id?: string
+          updated_at?: string
+          voting_locked?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_settings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
             referencedRelation: "sessions"
             referencedColumns: ["id"]
           },
@@ -1045,6 +1133,10 @@ export type Database = {
         Args: { p_claim_token: string; p_total_failed?: number }
         Returns: boolean
       }
+      get_session_access_state: {
+        Args: { session_code: string }
+        Returns: Json
+      }
       join_session: {
         Args: { member_display_name: string; session_code: string }
         Returns: Json
@@ -1094,11 +1186,75 @@ export type Database = {
         Args: { recommendations_total: number; target_appid: number }
         Returns: undefined
       }
+      remove_session_game: {
+        Args: { target_game_id: string; target_session_id: string }
+        Returns: undefined
+      }
+      remove_session_member: {
+        Args: {
+          ban_reason?: string
+          should_ban?: boolean
+          target_session_id: string
+          target_user_id: string
+        }
+        Returns: undefined
+      }
       pause_legacy_public_applist: {
         Args: { p_claim_token: string }
         Returns: boolean
       }
+      set_session_member_role: {
+        Args: {
+          new_role: Database["public"]["Enums"]["member_role"]
+          target_session_id: string
+          target_user_id: string
+        }
+        Returns: undefined
+      }
+      transfer_session_ownership: {
+        Args: { target_session_id: string; target_user_id: string }
+        Returns: undefined
+      }
       unaccent_safe: { Args: { value: string }; Returns: string }
+      unban_session_member: {
+        Args: { target_session_id: string; target_user_id: string }
+        Returns: undefined
+      }
+      update_session_settings: {
+        Args: {
+          next_coowners_can_manage_games: boolean
+          next_coowners_can_manage_members: boolean
+          next_coowners_can_manage_settings: boolean
+          next_games_locked: boolean
+          next_members_can_add_games: boolean
+          next_voting_locked: boolean
+          target_session_id: string
+        }
+        Returns: {
+          coowners_can_manage_games: boolean
+          coowners_can_manage_members: boolean
+          coowners_can_manage_settings: boolean
+          created_at: string
+          games_locked: boolean
+          members_can_add_games: boolean
+          session_id: string
+          updated_at: string
+          voting_locked: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "session_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_session_status: {
+        Args: {
+          next_status: Database["public"]["Enums"]["session_status"]
+          target_session_id: string
+        }
+        Returns: undefined
+      }
       upsert_legacy_public_applist_batch: {
         Args: { p_apps: Json; p_batch_index: number; p_claim_token: string }
         Returns: {
@@ -1120,7 +1276,7 @@ export type Database = {
         | "tournament"
         | "veto"
       game_source: "manual" | "steam"
-      member_role: "owner" | "moderator" | "member"
+      member_role: "owner" | "moderator" | "member" | "co_owner"
       metadata_status: "pending" | "complete" | "partial" | "failed" | "stale"
       ownership_status:
         | "owns"
@@ -1129,7 +1285,7 @@ export type Database = {
         | "unknown"
         | "subscription"
         | "free"
-      preferred_theme: "light" | "dark" | "dark-red"
+      preferred_theme: "light" | "dark" | "dark-red" | "purple" | "oled-black"
       session_kind: "quick" | "group"
       session_status: "open" | "locked" | "deciding" | "closed" | "expired"
     }
@@ -1270,7 +1426,7 @@ export const Constants = {
         "veto",
       ],
       game_source: ["manual", "steam"],
-      member_role: ["owner", "moderator", "member"],
+      member_role: ["owner", "moderator", "member", "co_owner"],
       metadata_status: ["pending", "complete", "partial", "failed", "stale"],
       ownership_status: [
         "owns",
@@ -1280,7 +1436,7 @@ export const Constants = {
         "subscription",
         "free",
       ],
-      preferred_theme: ["light", "dark", "dark-red"],
+      preferred_theme: ["light", "dark", "dark-red", "purple", "oled-black"],
       session_kind: ["quick", "group"],
       session_status: ["open", "locked", "deciding", "closed", "expired"],
     },

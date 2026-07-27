@@ -10,9 +10,9 @@ import { getBrowserSupabase } from "@/lib/supabase/browser";
 import { normalizeName } from "@/lib/utils";
 import { useI18n } from "@/i18n/client";
 
-interface AddGameDialogProps { sessionId: string; userId: string; onAdded: () => void }
+interface AddGameDialogProps { sessionId: string; userId: string; onAdded: () => void; disabled?: boolean }
 
-export function AddGameDialog({ sessionId, userId, onAdded }: AddGameDialogProps) {
+export function AddGameDialog({ sessionId, userId, onAdded, disabled }: AddGameDialogProps) {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"steam" | "manual">("steam");
@@ -63,7 +63,7 @@ export function AddGameDialog({ sessionId, userId, onAdded }: AddGameDialogProps
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button><Plus className="size-4" /> {t("add.trigger")}</Button></DialogTrigger>
+      <DialogTrigger asChild><Button disabled={disabled}><Plus className="size-4" /> {t("add.trigger")}</Button></DialogTrigger>
       <DialogContent className="!inset-0 !h-[100dvh] !max-h-none !w-full !max-w-none !translate-x-0 !translate-y-0 !rounded-none !p-0 sm:!inset-auto sm:!left-1/2 sm:!top-1/2 sm:!h-[min(80vh,760px)] sm:!w-[min(960px,calc(100vw-48px))] sm:!-translate-x-1/2 sm:!-translate-y-1/2 sm:!rounded-2xl overflow-hidden flex flex-col">
         <header className="shrink-0 border-b border-border px-5 pb-4 pt-5 sm:px-6 sm:pt-6">
           <p className="listed-eyebrow">{t("add.eyebrow")}</p>

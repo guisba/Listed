@@ -9,6 +9,16 @@ const presetRemovalMigration = readFileSync(join(process.cwd(), "supabase", "mig
 const legacyBootstrapMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260721144016_add_legacy_public_applist_bootstrap.sql"), "utf8");
 const imageRankingMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260721180000_steam_search_images_popularity.sql"), "utf8");
 const recommendationMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260721181000_steam_recommendations_popularity.sql"), "utf8");
+const sessionEnumMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260727140458_extend_session_roles_and_themes.sql"), "utf8");
+const sessionAdminMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260727140501_session_administration_security.sql"), "utf8");
+const sessionFeatureRepairMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260727140725_repair_session_game_features_by_appid.sql"), "utf8");
+const sessionBanIndexMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260727140851_index_session_ban_foreign_keys.sql"), "utf8");
+const sessionAdministrationCompletionMigration = [
+  "20260727155911_complete_session_administration.sql",
+  "20260727161257_complete_session_vote_and_join_enforcement.sql",
+  "20260727161301_complete_session_member_governance.sql",
+  "20260727161306_complete_session_decision_and_deletion.sql",
+].map((file) => readFileSync(join(process.cwd(), "supabase", "migrations", file), "utf8")).join("\n");
 const seed = readFileSync(join(process.cwd(), "supabase", "seed.sql"), "utf8");
 const exposedTables = ["profiles", "groups", "group_members", "sessions", "session_members", "session_invites", "catalog_games", "steam_app_index", "session_games", "votes", "game_ownership", "user_game_library", "decision_runs", "decision_results", "audit_logs"];
 
@@ -53,5 +63,66 @@ describe("database security migration", () => {
     expect(recommendationMigration).toContain("security invoker");
     expect(recommendationMigration).toContain("grant execute on function public.record_steam_recommendations(bigint, bigint) to service_role");
     expect(recommendationMigration).toMatch(/revoke all on function public\.record_steam_recommendations[\s\S]+from public, anon, authenticated/);
+  });
+
+  it("protege administração de sessões por RLS e RPCs dedicadas", () => {
+    expect(sessionAdminMigration).toContain("alter table public.session_settings enable row level security");
+    expect(sessionAdminMigration).toContain("alter table public.session_bans enable row level security");
+    expect(sessionAdminMigration).toContain("session_members_one_active_owner_idx");
+    expect(sessionAdminMigration).toMatch(/transfer_session_ownership[\s\S]+for update/);
+    expect(sessionAdminMigration).toMatch(/set_session_member_role[\s\S]+security definer[\s\S]+set search_path = ''/);
+    expect(sessionAdminMigration).toMatch(/remove_session_member[\s\S]+delete from public\.votes[\s\S]+delete from public\.game_ownership/);
+    expect(sessionAdminMigration).toContain("grant select on public.session_settings to authenticated");
+    expect(sessionAdminMigration).toContain("grant select on public.session_bans to authenticated");
+  });
+
+  it("revoga acesso público aos fluxos administrativos", () => {
+    for (const signature of [
+      "set_session_member_role(uuid, uuid, public.member_role)",
+      "remove_session_member(uuid, uuid, boolean, text)",
+      "unban_session_member(uuid, uuid)",
+      "transfer_session_ownership(uuid, uuid)",
+      "update_session_status(uuid, public.session_status)",
+      "remove_session_game(uuid, uuid)",
+    ]) {
+      expect(sessionAdminMigration).toContain(`revoke all on function public.${signature} from public, anon;`);
+    }
+  });
+
+  it("mantém compatibilidade de papéis e cria configurações para sessões existentes", () => {
+    expect(sessionEnumMigration).toContain("add value if not exists 'co_owner'");
+    expect(sessionEnumMigration).not.toContain("rename value 'moderator'");
+    expect(sessionAdminMigration).toMatch(/insert into public\.session_settings\(session_id\)[\s\S]+select id from public\.sessions/);
+    expect(sessionAdminMigration).toContain("Acesso bloqueado nesta sessão");
+  });
+
+  it("repara recursos históricos por AppID sem depender do vínculo de cache", () => {
+    expect(sessionFeatureRepairMigration).toContain("sg.steam_appid = cg.steam_appid");
+    expect(sessionFeatureRepairMigration).toContain("catalog_game_id = coalesce(sg.catalog_game_id, cg.id)");
+    expect(sessionFeatureRepairMigration).toContain("sg.source = 'steam'");
+  });
+
+  it("indexa todas as FKs operacionais de banimento", () => {
+    expect(sessionBanIndexMigration).toContain("session_bans_user_id_idx");
+    expect(sessionBanIndexMigration).toContain("session_bans_banned_by_idx");
+    expect(sessionBanIndexMigration).toContain("session_bans_revoked_by_idx");
+  });
+
+  it("fecha a matriz administrativa no banco sem reescrever migrations aplicadas", () => {
+    expect(sessionAdministrationCompletionMigration).toContain("private.can_perform_session_action");
+    expect(sessionAdministrationCompletionMigration).toContain("coowners_can_kick_members");
+    expect(sessionAdministrationCompletionMigration).toContain("coowners_can_ban_members");
+    expect(sessionAdministrationCompletionMigration).toContain("allow_vote_changes");
+    expect(sessionAdministrationCompletionMigration).toContain("max_votes_per_member");
+    expect(sessionAdministrationCompletionMigration).toContain("allow_anonymous_members");
+    expect(sessionAdministrationCompletionMigration).toContain("create policy sessions_update_owner");
+    expect(sessionAdministrationCompletionMigration).toContain("create or replace function public.delete_session");
+  });
+
+  it("mantém ações privilegiadas server-only e ownership atômico", () => {
+    expect(sessionAdministrationCompletionMigration).toMatch(/update_session_governance[\s\S]+security definer[\s\S]+set search_path = ''/);
+    expect(sessionAdministrationCompletionMigration).toMatch(/delete_session[\s\S]+revoke all on function public\.delete_session\(uuid\) from public, anon/);
+    expect(sessionAdminMigration).toMatch(/transfer_session_ownership[\s\S]+set role = 'co_owner'[\s\S]+set role = 'owner'[\s\S]+set owner_id = target_user_id/);
+    expect(sessionAdminMigration).toContain("session_members_one_active_owner_idx");
   });
 });

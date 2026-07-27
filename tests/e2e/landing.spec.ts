@@ -1,8 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("landing usa jogos reais e preserva tema", async ({ page }) => {
-  await page.goto("/");
-  await page.waitForLoadState("networkidle");
+  await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page).toHaveTitle(/Listed — Decida o que jogar com seus amigos/);
   await expect(page.getByRole("heading", { name: /Sua biblioteca.*lista do grupo.*decisão/i })).toBeVisible();
   await expect(page.getByRole("link", { name: /Criar uma lista/i })).toBeVisible();

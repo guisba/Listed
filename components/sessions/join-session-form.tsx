@@ -30,8 +30,13 @@ export function JoinSessionForm({ initialCode = "" }: { initialCode?: string }) 
       if (rpcError) throw rpcError;
       const result = data as { public_code: string };
       router.push(`/s/${result.public_code}`);
-    } catch {
-      setError(t("join.error"));
+    } catch (caught) {
+      const message = caught instanceof Error
+        ? caught.message
+        : typeof caught === "object" && caught !== null && "message" in caught && typeof caught.message === "string"
+          ? caught.message
+          : "";
+      setError(t(message.includes("Acesso bloqueado") ? "join.banned" : "join.error"));
       setIsLoading(false);
     }
   }

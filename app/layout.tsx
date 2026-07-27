@@ -34,7 +34,7 @@ export default async function RootLayout({
 }>) {
   const { locale, messages } = await getServerI18n();
   return (
-    <html lang={locale} className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+    <html lang={locale} className={`${geistSans.variable} ${geistMono.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="antialiased">
         <I18nProvider locale={locale} messages={messages}>
           <ThemeProvider>

@@ -50,10 +50,16 @@ provider OAuth antes de cadastrar suas próprias credenciais.
 3. aplicar migrations Supabase e gerar tipos
 4. `npm run build:vercel`
 5. deployment Preview
-6. smoke test de criação, dois participantes, voto, sorteio e temas
+6. smoke test de criação, três participantes, voto, sorteio e os cinco temas
 7. promover o artefato; não reconstruir
 
 No smoke test, abra o Preview sem `listed_locale`, confirme a negociação por `Accept-Language`, alterne entre pt-BR e en-US e recarregue a mesma rota. Verifique `<html lang>`, metadata, criação/entrada e uma sala existente nos dois idiomas. O cookie não contém dados de sessão e não exige variável de ambiente.
+
+Para sessões, use três identidades isoladas (`owner`, `co_owner` e `member`) e
+valide promoção, delegação, expulsão, banimento, rebaixamento e transferência
+de propriedade. Confirme a remoção de acesso no cliente afetado e a atualização
+Realtime nos demais. Abra filtros combinados, o passe de entrada com QR local e
+os temas Light, Dark, Dark Red, Purple e OLED Black em desktop e mobile.
 
 Rollback de app usa o deployment anterior. Migrations são aditivas; uma correção de banco recebe nova migration, nunca `reset` em produção.
 

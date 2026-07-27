@@ -1,3 +1,8 @@
+interface SteamCategory {
+  id?: number;
+  description: string;
+}
+
 const FEATURE_MAP: Array<[RegExp, string]> = [
   [/single-player/i, "singleplayer"],
   [/multi-player|multiplayer/i, "multiplayer"],
@@ -9,13 +14,31 @@ const FEATURE_MAP: Array<[RegExp, string]> = [
   [/controller/i, "controller-support"],
 ];
 
+const CATEGORY_ID_FEATURES: Record<number, string> = {
+  1: "multiplayer",
+  2: "singleplayer",
+  9: "coop",
+  24: "coop-local",
+  28: "controller-support",
+  36: "pvp-online",
+  37: "pvp-local",
+  38: "coop-online",
+  39: "coop-local",
+  44: "remote-play",
+  49: "pvp",
+};
+
 export function normalizeSteamFeatures(
-  categoryNames: string[],
+  categories: SteamCategory[],
   platforms: Record<string, boolean>,
   isFree: boolean,
 ) {
   const features = new Set<string>();
-  for (const name of categoryNames) {
+  for (const category of categories) {
+    if (category.id && CATEGORY_ID_FEATURES[category.id]) {
+      features.add(CATEGORY_ID_FEATURES[category.id]);
+    }
+    const name = category.description;
     for (const [pattern, feature] of FEATURE_MAP) {
       if (pattern.test(name)) features.add(feature);
     }

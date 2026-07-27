@@ -10,6 +10,8 @@ erDiagram
   GROUPS o|--o{ SESSIONS : creates
   SESSIONS ||--o{ SESSION_GAMES : lists
   SESSIONS ||--o{ SESSION_MEMBERS : includes
+  SESSIONS ||--|| SESSION_SETTINGS : configures
+  SESSIONS ||--o{ SESSION_BANS : blocks
   CATALOG_GAMES o|--o{ SESSION_GAMES : references
   STEAM_APP_INDEX ||--o| CATALOG_GAMES : hydrates
   SESSION_GAMES ||--o{ VOTES : receives
@@ -29,12 +31,27 @@ erDiagram
 - `steam_app_index` guarda descoberta leve, proveniência, disponibilidade, timestamps oficiais, geração de bootstrap, URLs/status de imagem e o score agregado de popularidade; `catalog_games` guarda detalhes normalizados e TTL.
 - `private.steam_app_popularity` guarda apenas agregados por AppID: adições, votos, grupos/sessões distintas e recomendações Steam já hidratadas. Não pertence ao Data API público.
 - `steam_catalog_sync_state` é singleton com completude, checkpoints full/incremental e lease; `steam_catalog_sync_runs` é histórico observável por execução.
+- `session_settings` separa bloqueios de jogos/votos e delegações de co-owner do registro principal da sessão.
+- `session_bans` preserva bloqueios por identidade, inclusive após remover o membership; `audit_logs` continua a fonte única de histórico.
+- Um índice parcial garante somente um `owner` ativo por sessão. Transferência bloqueia sessão e memberships na mesma transação.
 
 ## RLS
 
-Todas as tabelas públicas têm RLS. Sessões, membros, jogos, votos e propriedade exigem membership; votos e propriedade só podem usar `auth.uid()`; biblioteca é privada; catálogo é somente leitura para clientes; logs são visíveis apenas a owner/moderador.
+Todas as tabelas públicas têm RLS. Sessões, membros, jogos, votos e propriedade exigem membership; votos e propriedade só podem usar `auth.uid()`; biblioteca é privada; catálogo é somente leitura para clientes; settings são legíveis por membros e bans/logs somente por administradores.
+
+Administração escreve apenas por RPCs dedicadas. Owner pode promover/rebaixar co-owner e transferir propriedade; co-owner recebe somente capacidades delegadas. Expulsão limpa votos e declarações de acesso da pessoa na sessão. O join verifica ban ativo antes de reativar um membership.
 
 Novos projetos Supabase não expõem tabelas automaticamente, portanto a migration concede privilégios por tabela além das policies.
+
+## Rollback da administração
+
+As migrations são aditivas e não apagam sessões, votos, jogos ou ownership.
+Em caso de rollback do aplicativo, mantenha `session_settings`, `session_bans`,
+os novos valores do enum e os logs: a versão anterior ignora esses objetos. Não
+remova `co_owner` do enum enquanto houver memberships com esse papel. Uma
+reversão futura do banco deve primeiro rebaixar co-owners de forma auditada,
+revogar as RPCs novas e somente então remover objetos sem dependências, sempre
+por uma migration corretiva nova.
 
 Clientes autenticados podem selecionar índice/cache e executar apenas `search_steam_apps` como `security invoker`. Tabelas de sync não têm policy ou grant de cliente; escrita no índice/cache exige `service_role` server-only.
 
