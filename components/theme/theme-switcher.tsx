@@ -1,7 +1,7 @@
 "use client";
 
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Check, Contrast, Moon, Sun } from "lucide-react";
+import { Check, Circle, Contrast, Moon, Palette, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { getBrowserSupabase } from "@/lib/supabase/browser";
@@ -11,6 +11,8 @@ const options = [
   { value: "light", label: "theme.light", icon: Sun },
   { value: "dark", label: "theme.dark", icon: Moon },
   { value: "dark-red", label: "theme.darkRed", icon: Contrast },
+  { value: "purple", label: "theme.purple", icon: Palette },
+  { value: "oled-black", label: "theme.oledBlack", icon: Circle },
 ] as const;
 
 export function ThemeSwitcher() {

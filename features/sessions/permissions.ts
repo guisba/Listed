@@ -1,7 +1,7 @@
 import type { MemberRole } from "@/types/domain";
 
 export function canManageSession(role: MemberRole) {
-  return role === "owner" || role === "moderator";
+  return role === "owner" || role === "co_owner" || role === "moderator";
 }
 
 export function canDeleteSession(role: MemberRole) {

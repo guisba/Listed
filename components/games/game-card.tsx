@@ -13,9 +13,10 @@ interface ListedGameCardProps {
   rank: number;
   onVote: (game: SessionGame) => Promise<boolean>;
   onOwnership: (game: SessionGame, status: OwnershipStatus) => Promise<boolean>;
+  voteDisabled?: boolean;
 }
 
-export function ListedGameCard({ game, rank, onVote, onOwnership }: ListedGameCardProps) {
+export function ListedGameCard({ game, rank, onVote, onOwnership, voteDisabled }: ListedGameCardProps) {
   const { t } = useI18n();
   const [voted, setVoted] = useState(Boolean(game.has_voted));
   const [voteCount, setVoteCount] = useState(game.vote_count ?? 0);
@@ -56,7 +57,7 @@ export function ListedGameCard({ game, rank, onVote, onOwnership }: ListedGameCa
         <div className="mt-2 flex min-h-6 flex-wrap gap-1.5">{[...new Set([...game.features, ...game.platforms])].slice(0, 3).map((feature) => <Badge key={feature}>{feature}</Badge>)}</div>
       </div>
       <div className="col-span-2 grid grid-cols-[1fr_auto] items-center gap-2 sm:col-span-1 sm:grid-cols-1 sm:justify-items-end">
-        <Button variant={voted ? "default" : "secondary"} onClick={toggleVote} aria-pressed={voted} className="min-w-28" disabled={votePending}>
+        <Button variant={voted ? "default" : "secondary"} onClick={toggleVote} aria-pressed={voted} className="min-w-28" disabled={votePending || voteDisabled}>
           {votePending ? <LoaderCircle className="size-4 animate-spin" /> : voted ? <Check className="size-4" /> : <Heart className="size-4" />}
           <span>{voted ? t("game.voted") : t("game.vote")}</span><strong className="tabular font-mono">{voteCount}</strong>
         </Button>

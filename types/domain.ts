@@ -1,4 +1,4 @@
-export type ThemeName = "light" | "dark" | "dark-red";
+export type ThemeName = "light" | "dark" | "dark-red" | "purple" | "oled-black";
 export type DecisionMethod =
   | "multi_vote"
   | "single_vote"
@@ -8,7 +8,7 @@ export type DecisionMethod =
   | "elimination"
   | "tournament"
   | "veto";
-export type MemberRole = "owner" | "moderator" | "member";
+export type MemberRole = "owner" | "co_owner" | "moderator" | "member";
 export type OwnershipStatus =
   | "owns"
   | "does_not_own"
@@ -33,6 +33,40 @@ export interface SessionMember {
   display_name: string;
   role: MemberRole;
   joined_at: string;
+  vote_count?: number;
+  owned_games_count?: number;
+}
+
+export interface SessionSettings {
+  session_id: string;
+  games_locked: boolean;
+  voting_locked: boolean;
+  members_can_add_games: boolean;
+  coowners_can_manage_games: boolean;
+  coowners_can_manage_members: boolean;
+  coowners_can_manage_settings: boolean;
+  updated_at: string;
+}
+
+export interface SessionBan {
+  id: string;
+  session_id: string;
+  user_id: string;
+  banned_by: string;
+  display_name: string;
+  reason: string | null;
+  created_at: string;
+}
+
+export interface SessionAuditLog {
+  id: string;
+  session_id: string;
+  actor_id: string | null;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
 }
 
 export interface SessionGame {

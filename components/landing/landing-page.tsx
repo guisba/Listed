@@ -30,7 +30,7 @@ function GameArtwork({ game, priority = false }: { game: LandingDemoGame; priori
   return <Image src={source} alt={t("game.coverAlt", { game: game.name })} fill sizes="(max-width: 640px) 88px, 128px" className="object-cover transition-transform duration-300 group-hover:scale-[1.035] motion-reduce:transition-none" priority={priority} onError={() => setFailed(true)} />;
 }
 
-export function LandingPage({ games }: { games: LandingDemoGame[] }) {
+export function LandingPage({ games, notice }: { games: LandingDemoGame[]; notice?: "removed" | "banned" }) {
   const router = useRouter();
   const { t, plural } = useI18n();
   const [code, setCode] = useState("");
@@ -61,6 +61,11 @@ export function LandingPage({ games }: { games: LandingDemoGame[] }) {
     <div className="min-h-screen bg-background">
       <SiteHeader />
       <main id="main-content">
+        {notice ? (
+          <div role="status" className="border-b border-warning/35 bg-warning/10 px-4 py-3 text-center text-sm font-medium text-foreground">
+            {t(notice === "banned" ? "room.accessBanned" : "room.accessRemoved")}
+          </div>
+        ) : null}
         <section className="landing-stage relative isolate overflow-hidden border-b border-border">
           <div aria-hidden="true" className="landing-grid pointer-events-none absolute inset-0 -z-20" />
           <div aria-hidden="true" className="landing-orbit landing-orbit-one pointer-events-none absolute -z-10" />

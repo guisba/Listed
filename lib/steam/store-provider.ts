@@ -17,7 +17,7 @@ interface StoreData {
   is_free?: boolean;
   platforms?: Record<string, boolean>;
   genres?: Array<{ description: string }>;
-  categories?: Array<{ description: string }>;
+  categories?: Array<{ id?: number; description: string }>;
   developers?: string[];
   publishers?: string[];
   supported_languages?: string;
@@ -99,7 +99,8 @@ export class SteamStoreProvider implements SteamProvider {
     const data = item.data;
     const name = data.name as string;
     const platforms = data.platforms ?? {};
-    const categoryNames = (data.categories ?? []).map((category) => category.description).filter(Boolean);
+    const categories = (data.categories ?? []).filter((category) => Boolean(category.description));
+    const categoryNames = categories.map((category) => category.description);
     const shortDescription = stripExternalHtml(data.short_description)?.slice(0, 2_000) ?? null;
     const fullDescription = stripExternalHtml(data.detailed_description);
     const headerImage = safeSteamImageUrl(data.header_image);
@@ -125,7 +126,7 @@ export class SteamStoreProvider implements SteamProvider {
         .map(([platform]) => (platform === "mac" ? "macos" : platform)),
       genres: (data.genres ?? []).map((genre) => genre.description).filter(Boolean),
       categories: categoryNames,
-      features: normalizeSteamFeatures(categoryNames, platforms, Boolean(data.is_free)),
+      features: normalizeSteamFeatures(categories, platforms, Boolean(data.is_free)),
       developers: data.developers?.filter(Boolean) ?? [],
       publishers: data.publishers?.filter(Boolean) ?? [],
       supportedLanguages: normalizeLanguages(data.supported_languages),

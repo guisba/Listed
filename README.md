@@ -6,7 +6,7 @@
 
 ## Estado do produto
 
-O MVP inclui landing page com demonstração baseada em jogos reais, criação e entrada em sessões temporárias, identidade anônima Supabase, código curto, sala em tempo real, jogos manuais, seletor Steam com autocomplete local e prévia server-side, votos, propriedade, filtros, sorteio simples ou ponderado, administração básica, três temas, pt-BR/en-US e persistência PostgreSQL com RLS.
+O MVP inclui landing page com demonstração baseada em jogos reais, criação e entrada em sessões temporárias, identidade anônima Supabase, código curto, sala em tempo real, jogos manuais, seletor Steam com autocomplete local e prévia server-side, votos, propriedade, filtros combináveis, sorteio simples ou ponderado, administração por owner/co-owner, compartilhamento com QR, cinco temas, pt-BR/en-US e persistência PostgreSQL com RLS.
 
 Grupos permanentes, OAuth, upgrade de conta e modos avançados já têm fundação no schema, mas continuam no roadmap. O catálogo Steam possui bootstrap e sync incremental oficiais; nenhum sync roda durante a pesquisa do usuário.
 
@@ -128,7 +128,7 @@ docs/                 arquitetura, banco, segurança e operação
 types/                domínio e tipos gerados do Supabase
 ```
 
-Consulte [identidade visual](docs/brand.md), [arquitetura](docs/architecture.md), [banco](docs/database.md), [segurança](docs/security.md), [Steam](docs/steam-integration.md), [deploy](docs/deployment.md) e [decisões](docs/product-decisions.md).
+Consulte [identidade visual](docs/brand.md), [arquitetura](docs/architecture.md), [banco](docs/database.md), [segurança](docs/security.md), [Steam](docs/steam-integration.md), [deploy](docs/deployment.md), [roadmap do player musical](docs/music-player-roadmap.md) e [decisões](docs/product-decisions.md).
 
 ## Limitações conhecidas
 
@@ -137,6 +137,8 @@ Consulte [identidade visual](docs/brand.md), [arquitetura](docs/architecture.md)
 - Detalhes de loja usam endpoint não documentado e permanecem atrás de feature flag.
 - O host público `api.steampowered.com` aceita Web API keys comuns; `partner.steam-api.com` exige Publisher Web API Key e não é usado pelo catálogo do Listed.
 - O E2E multicontexto depende de um ambiente Supabase de teste com autenticação anônima ativa.
+- Aprovação prévia para entrar em sessões permanece em uma segunda fase; expulsão e bloqueio persistente já são suportados.
+- O player musical é apenas um roadmap de conformidade e não adiciona SDKs ou reprodução ao produto atual.
 
 ## Roadmap
 

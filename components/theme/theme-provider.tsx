@@ -8,7 +8,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     <NextThemesProvider
       attribute="data-theme"
       defaultTheme="system"
-      themes={["light", "dark", "dark-red"]}
+      themes={["light", "dark", "dark-red", "purple", "oled-black"]}
       enableSystem
       disableTransitionOnChange
       storageKey="listed-theme"

@@ -82,6 +82,60 @@
   --shadow-color: 0 0 0;
 }
 
+[data-theme="purple"] {
+  --background: #100c18;
+  --foreground: #f5f0ff;
+  --card: #1a1427;
+  --card-foreground: #f5f0ff;
+  --popover: #211830;
+  --popover-foreground: #f5f0ff;
+  --primary: #a783ff;
+  --primary-foreground: #160b30;
+  --secondary: #282037;
+  --secondary-foreground: #f3ecff;
+  --muted: #302642;
+  --muted-foreground: #afa2c4;
+  --accent: #352254;
+  --accent-foreground: #eadfff;
+  --destructive: #ff6d86;
+  --destructive-foreground: #2e0710;
+  --border: #3d3150;
+  --input: #504065;
+  --ring: #b79aff;
+  --success: #62d2ad;
+  --warning: #e8ac5d;
+  --info: #82b8ec;
+  --surface-raised: #221a30;
+  --shadow-color: 0 0 0;
+}
+
+[data-theme="oled-black"] {
+  --background: #000000;
+  --foreground: #f5f5f3;
+  --card: #070707;
+  --card-foreground: #f5f5f3;
+  --popover: #0b0b0b;
+  --popover-foreground: #f5f5f3;
+  --primary: #ff6f51;
+  --primary-foreground: #220c07;
+  --secondary: #111111;
+  --secondary-foreground: #f2f2ef;
+  --muted: #181818;
+  --muted-foreground: #a5a5a0;
+  --accent: #251511;
+  --accent-foreground: #ffdcd3;
+  --destructive: #ff6475;
+  --destructive-foreground: #2b060b;
+  --border: #292929;
+  --input: #3a3a3a;
+  --ring: #ff8066;
+  --success: #55cfa5;
+  --warning: #e8ab54;
+  --info: #7db9dc;
+  --surface-raised: #0d0d0d;
+  --shadow-color: 0 0 0;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -132,7 +186,7 @@
 
 * { border-color: var(--border); }
 html { color-scheme: light; scroll-behavior: smooth; background: var(--background); }
-[data-theme="dark"], [data-theme="dark-red"] { color-scheme: dark; }
+[data-theme="dark"], [data-theme="dark-red"], [data-theme="purple"], [data-theme="oled-black"] { color-scheme: dark; }
 body { min-height: 100vh; overflow-x: hidden; background: var(--background); color: var(--foreground); font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif; text-rendering: optimizeLegibility; }
 button, a, input, select { -webkit-tap-highlight-color: transparent; }
 button, a { touch-action: manipulation; }

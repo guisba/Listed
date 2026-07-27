@@ -31,7 +31,11 @@ flowchart LR
 
 ## Fluxos
 
-Criação e ingresso usam RPCs transacionais com `auth.uid()`. Depois do ingresso, leituras e mutations passam pela Data API com RLS. A sala carrega snapshot inicial e assina mudanças de membros, jogos, votos, propriedade, sessão e resultados; Presence mantém apenas IDs efêmeros.
+Criação e ingresso usam RPCs transacionais com `auth.uid()`. Depois do ingresso, leituras e mutations passam pela Data API com RLS. A sala carrega snapshot inicial e assina mudanças de membros, jogos, votos, propriedade, configurações, bans, auditoria, sessão e resultados; Presence mantém apenas IDs efêmeros.
+
+Papéis persistentes são `owner`, `co_owner` e `member`; `moderator` existe somente como leitura retrocompatível até uma migration posterior ao deploy. Promoção, remoção, ban, desbloqueio e transferência de ownership passam por RPCs `SECURITY DEFINER`, com `search_path` fixo, `auth.uid()` e audit log. Um índice parcial garante um owner ativo. O participante removido perde RLS imediatamente e o cliente confirma o estado em Realtime, ao retomar a aba e em intervalo defensivo.
+
+Filtros são estado local serializado na URL. Opções do mesmo grupo usam OR; grupos usam AND. Categorias Steam são normalizadas por IDs numéricos estáveis, nunca por rótulos localizados. O compartilhamento gera o QR no browser e deriva a URL somente de `origin + /s/<code>`, sem proxy ou serviço externo.
 
 O autocomplete nunca chama a Steam: ele pesquisa `steam_app_index` com trigram. A resposta textual inclui imagens e popularidade já armazenadas. Uma segunda requisição opcional recebe somente até 12 AppIDs visíveis sem cápsula, respeita cancelamento do cliente, usa concorrência 3 e passa pelo mesmo cache antes do adapter de detalhes. AppID e URL preservam o fluxo direto. O catálogo oficial é paginado por `last_appid` e `if_modified_since`, com checkpoint por página e histórico de execução.
 
@@ -42,6 +46,10 @@ A landing é um Server Component na fronteira dos dados. Ela resolve uma lista f
 ## Internacionalização
 
 A rota permanece canônica e sem prefixo de idioma. `listed_locale` aceita apenas `pt-BR` e `en-US`; na ausência do cookie, o servidor negocia `Accept-Language`. Isso evita flash e divergência de hidratação, preserva links de convite e permite localizar metadata, manifest e `<html lang>` na primeira resposta. Componentes client-side recebem apenas o dicionário selecionado e usam `Intl` para pluralização, datas e números.
+
+## Temas
+
+Light, Dark, Dark Red, Purple e OLED Black compartilham os mesmos tokens semânticos. A preferência fica em `listed-theme` e, para contas permanentes, em `profiles.preferred_theme`. Preto OLED usa fundo `#000` sem alterar componentes individuais.
 
 ## Cache e deploy
 
