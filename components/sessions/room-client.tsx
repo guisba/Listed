@@ -15,7 +15,7 @@ import { ShareSessionDialog } from "@/components/sessions/share-session-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { canManageSession } from "@/features/sessions/permissions";
+import { canManageSession, canPerformSessionAction } from "@/features/sessions/permissions";
 import { useRoomData } from "@/features/sessions/use-room-data";
 import {
   countActiveSessionFilters,
@@ -45,7 +45,17 @@ export function RoomClient({ code }: { code: string }) {
 
   const currentMember = members.find((member) => member.user_id === userId);
   const canManage = currentMember ? canManageSession(currentMember.role) : false;
-  const canAddGames = !settings?.games_locked && (settings?.members_can_add_games !== false || canManage);
+  const canAddGames = Boolean(
+    settings
+    && currentMember
+    && session?.status === "open"
+    && canPerformSessionAction(currentMember.role, "add_game", settings),
+  );
+  const canStartDecision = Boolean(
+    settings
+    && currentMember
+    && canPerformSessionAction(currentMember.role, "start_decision", settings),
+  );
   const visibleGames = useMemo(() => {
     const query = search.trim().toLocaleLowerCase(locale);
     return filterSessionGames(
@@ -153,10 +163,10 @@ export function RoomClient({ code }: { code: string }) {
               <p className="listed-eyebrow">{t("room.decision")}</p>
               <p className="mt-3 text-sm font-semibold">{t(session.decision_method === "weighted_random" ? "decision.weighted_random" : session.decision_method === "random" ? "decision.random" : "decision.openVoting")}</p>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">{games.length ? plural("room.eligible.one", "room.eligible.other", games.length) : t("room.addToDecide")}</p>
-              <Button onClick={draw} disabled={drawing || games.length === 0} className="mt-4 w-full" variant="secondary"><Dices className={`size-4 ${drawing ? "animate-spin" : ""}`} /> {drawing ? t("room.drawing") : t("room.draw")}</Button>
+              <Button onClick={draw} disabled={drawing || games.length === 0 || !canStartDecision} className="mt-4 w-full" variant="secondary"><Dices className={`size-4 ${drawing ? "animate-spin" : ""}`} /> {drawing ? t("room.drawing") : t("room.draw")}</Button>
             </section>
 
-            {canManage ? <section className="rounded-xl border border-border p-4"><p className="listed-eyebrow">{t("room.admin")}</p><div className="mt-3 grid gap-2">{settings && currentMember ? <SessionAdminDialog sessionId={session.id} currentUserId={userId} currentRole={currentMember.role} members={members} games={games} settings={settings} bans={bans} auditLogs={auditLogs} onChanged={reload} onToast={setToast} /> : null}<Button variant="ghost" onClick={() => updateStatus(session.status === "locked" ? "open" : "locked")} className="justify-start"><Lock className="size-4" /> {session.status === "locked" ? t("room.reopen") : t("room.lock")}</Button><Button variant="ghost" onClick={() => updateStatus("closed")} className="justify-start text-destructive">{t("room.close")}</Button></div></section> : null}
+            {canManage ? <section className="rounded-xl border border-border p-4"><p className="listed-eyebrow">{t("room.admin")}</p><div className="mt-3 grid gap-2">{settings && currentMember ? <SessionAdminDialog key={`${settings.updated_at}:${session.status}:${session.max_participants}`} sessionId={session.id} sessionStatus={session.status} maxParticipants={session.max_participants} currentUserId={userId} currentRole={currentMember.role} members={members} onlineUserIds={onlineUserIds} games={games} settings={settings} bans={bans} auditLogs={auditLogs} onChanged={reload} onToast={setToast} /> : null}{currentMember?.role === "owner" ? <><Button variant="ghost" onClick={() => updateStatus(session.status === "locked" ? "open" : "locked")} className="justify-start"><Lock className="size-4" /> {session.status === "locked" ? t("room.reopen") : t("room.lock")}</Button><Button variant="ghost" onClick={() => updateStatus("closed")} className="justify-start text-destructive">{t("room.close")}</Button></> : null}</div></section> : null}
           </aside>
         </div>
       </main>

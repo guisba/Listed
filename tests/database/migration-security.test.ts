@@ -13,6 +13,12 @@ const sessionEnumMigration = readFileSync(join(process.cwd(), "supabase", "migra
 const sessionAdminMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260727140501_session_administration_security.sql"), "utf8");
 const sessionFeatureRepairMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260727140725_repair_session_game_features_by_appid.sql"), "utf8");
 const sessionBanIndexMigration = readFileSync(join(process.cwd(), "supabase", "migrations", "20260727140851_index_session_ban_foreign_keys.sql"), "utf8");
+const sessionAdministrationCompletionMigration = [
+  "20260727155911_complete_session_administration.sql",
+  "20260727161257_complete_session_vote_and_join_enforcement.sql",
+  "20260727161301_complete_session_member_governance.sql",
+  "20260727161306_complete_session_decision_and_deletion.sql",
+].map((file) => readFileSync(join(process.cwd(), "supabase", "migrations", file), "utf8")).join("\n");
 const seed = readFileSync(join(process.cwd(), "supabase", "seed.sql"), "utf8");
 const exposedTables = ["profiles", "groups", "group_members", "sessions", "session_members", "session_invites", "catalog_games", "steam_app_index", "session_games", "votes", "game_ownership", "user_game_library", "decision_runs", "decision_results", "audit_logs"];
 
@@ -100,5 +106,23 @@ describe("database security migration", () => {
     expect(sessionBanIndexMigration).toContain("session_bans_user_id_idx");
     expect(sessionBanIndexMigration).toContain("session_bans_banned_by_idx");
     expect(sessionBanIndexMigration).toContain("session_bans_revoked_by_idx");
+  });
+
+  it("fecha a matriz administrativa no banco sem reescrever migrations aplicadas", () => {
+    expect(sessionAdministrationCompletionMigration).toContain("private.can_perform_session_action");
+    expect(sessionAdministrationCompletionMigration).toContain("coowners_can_kick_members");
+    expect(sessionAdministrationCompletionMigration).toContain("coowners_can_ban_members");
+    expect(sessionAdministrationCompletionMigration).toContain("allow_vote_changes");
+    expect(sessionAdministrationCompletionMigration).toContain("max_votes_per_member");
+    expect(sessionAdministrationCompletionMigration).toContain("allow_anonymous_members");
+    expect(sessionAdministrationCompletionMigration).toContain("create policy sessions_update_owner");
+    expect(sessionAdministrationCompletionMigration).toContain("create or replace function public.delete_session");
+  });
+
+  it("mantém ações privilegiadas server-only e ownership atômico", () => {
+    expect(sessionAdministrationCompletionMigration).toMatch(/update_session_governance[\s\S]+security definer[\s\S]+set search_path = ''/);
+    expect(sessionAdministrationCompletionMigration).toMatch(/delete_session[\s\S]+revoke all on function public\.delete_session\(uuid\) from public, anon/);
+    expect(sessionAdminMigration).toMatch(/transfer_session_ownership[\s\S]+set role = 'co_owner'[\s\S]+set role = 'owner'[\s\S]+set owner_id = target_user_id/);
+    expect(sessionAdminMigration).toContain("session_members_one_active_owner_idx");
   });
 });

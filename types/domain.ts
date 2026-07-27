@@ -9,6 +9,7 @@ export type DecisionMethod =
   | "tournament"
   | "veto";
 export type MemberRole = "owner" | "co_owner" | "moderator" | "member";
+export type SessionPermissionScope = "owner" | "coowners" | "everyone";
 export type OwnershipStatus =
   | "owns"
   | "does_not_own"
@@ -25,6 +26,7 @@ export interface SessionSummary {
   decision_method: DecisionMethod;
   expires_at: string | null;
   owner_id: string;
+  max_participants: number;
 }
 
 export interface SessionMember {
@@ -45,6 +47,16 @@ export interface SessionSettings {
   coowners_can_manage_games: boolean;
   coowners_can_manage_members: boolean;
   coowners_can_manage_settings: boolean;
+  game_add_permission: SessionPermissionScope;
+  game_remove_permission: Exclude<SessionPermissionScope, "everyone">;
+  allow_vote_changes: boolean;
+  max_votes_per_member: number;
+  decision_permission: SessionPermissionScope;
+  allow_anonymous_members: boolean;
+  coowners_can_kick_members: boolean;
+  coowners_can_ban_members: boolean;
+  coowners_can_remove_games: boolean;
+  coowners_can_lock_voting: boolean;
   updated_at: string;
 }
 

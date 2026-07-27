@@ -16,6 +16,16 @@ const settings: SessionSettings = {
   coowners_can_manage_games: true,
   coowners_can_manage_members: false,
   coowners_can_manage_settings: false,
+  game_add_permission: "everyone",
+  game_remove_permission: "coowners",
+  allow_vote_changes: true,
+  max_votes_per_member: 0,
+  decision_permission: "everyone",
+  allow_anonymous_members: true,
+  coowners_can_kick_members: false,
+  coowners_can_ban_members: false,
+  coowners_can_remove_games: true,
+  coowners_can_lock_voting: false,
   updated_at: "2026-07-27T00:00:00Z",
 };
 
@@ -54,9 +64,12 @@ describe("session controls", () => {
     renderWithI18n(
       <SessionAdminDialog
         sessionId={settings.session_id}
+        sessionStatus="open"
+        maxParticipants={20}
         currentUserId="owner"
         currentRole="owner"
         members={members}
+        onlineUserIds={["owner"]}
         games={[]}
         settings={settings}
         bans={[]}
@@ -74,7 +87,8 @@ describe("session controls", () => {
         onToast={vi.fn()}
       />,
     );
-    await user.click(screen.getByRole("button", { name: "Abrir administração" }));
+    await user.click(screen.getByRole("button", { name: "Gerenciar sessão" }));
+    await user.click(screen.getByRole("button", { name: "Ações para Nando" }));
     expect(screen.getByRole("button", { name: /Tornar co-dono/ })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Transferir propriedade" })).toBeInTheDocument();
     await user.click(screen.getByRole("tab", { name: "Histórico" }));

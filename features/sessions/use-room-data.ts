@@ -34,7 +34,7 @@ export function useRoomData(code: string) {
     try {
       const user = await ensureAnonymousUser();
       setUserId(user.id);
-      const { data: sessionData, error: sessionError } = await supabase.from("sessions").select("id,title,public_code,status,decision_method,expires_at,owner_id").eq("public_code", code).maybeSingle();
+      const { data: sessionData, error: sessionError } = await supabase.from("sessions").select("id,title,public_code,status,decision_method,expires_at,owner_id,max_participants").eq("public_code", code).maybeSingle();
       if (sessionError) throw sessionError;
       if (!sessionData) {
         const { data: accessData } = await supabase.rpc("get_session_access_state", { session_code: code });
@@ -116,7 +116,7 @@ export function useRoomData(code: string) {
         router.replace(`/?sessionAccess=${state}`);
       }
     };
-    const interval = window.setInterval(() => void checkAccess(), 15_000);
+    const interval = window.setInterval(() => void checkAccess(), 5_000);
     const onVisibility = () => {
       if (document.visibilityState === "visible") void checkAccess();
     };
