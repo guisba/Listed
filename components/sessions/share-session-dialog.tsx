@@ -59,8 +59,8 @@ export function ShareSessionDialog({
         <p className="listed-eyebrow text-primary">{t("share.code")}: {code}</p>
         <DialogTitle className="mt-2 text-3xl font-semibold tracking-[-.04em]">{t("share.title")}</DialogTitle>
         <DialogDescription className="mt-2 text-sm leading-6 text-muted-foreground">{t("share.description")}</DialogDescription>
-        <div className="mt-6 grid gap-6 md:grid-cols-[1fr_13rem]">
-          <div className="space-y-4">
+        <div className="mt-6 grid min-w-0 gap-6 md:grid-cols-[minmax(0,1fr)_13rem]">
+          <div className="min-w-0 space-y-4">
             <div>
               <label className="listed-eyebrow">{t("share.link")}</label>
               <div className="mt-2 flex items-center gap-2 rounded-lg border border-border bg-background p-2 pl-3">
@@ -78,14 +78,14 @@ export function ShareSessionDialog({
                 {copied === "code" ? <Check className="size-4 text-success" /> : <Copy className="size-4 text-muted-foreground" />}
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <Button variant="secondary" size="sm" onClick={() => void nativeShare()}><Share2 className="size-4" />{t("share.native")}</Button>
-              <Button asChild variant="secondary" size="sm"><a href={`https://wa.me/?text=${encodedText}`} target="_blank" rel="noreferrer"><MessageCircle className="size-4" />{t("share.whatsapp")}</a></Button>
-              <Button asChild variant="secondary" size="sm"><a href={`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`} target="_blank" rel="noreferrer"><Send className="size-4" />{t("share.telegram")}</a></Button>
-              <Button asChild variant="secondary" size="sm"><a href={`mailto:?subject=${encodeURIComponent(title)}&body=${encodedText}`}><Mail className="size-4" />{t("share.email")}</a></Button>
+            <div className="grid min-w-0 grid-cols-2 gap-2">
+              <Button className="h-auto min-w-0 whitespace-normal py-2 leading-tight" variant="secondary" size="sm" onClick={() => void nativeShare()}><Share2 className="size-4 shrink-0" />{t("share.native")}</Button>
+              <Button asChild className="h-auto min-w-0 whitespace-normal py-2 leading-tight" variant="secondary" size="sm"><a href={`https://wa.me/?text=${encodedText}`} target="_blank" rel="noreferrer"><MessageCircle className="size-4 shrink-0" />{t("share.whatsapp")}</a></Button>
+              <Button asChild className="h-auto min-w-0 whitespace-normal py-2 leading-tight" variant="secondary" size="sm"><a href={`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`} target="_blank" rel="noreferrer"><Send className="size-4 shrink-0" />{t("share.telegram")}</a></Button>
+              <Button asChild className="h-auto min-w-0 whitespace-normal py-2 leading-tight" variant="secondary" size="sm"><a href={`mailto:?subject=${encodeURIComponent(title)}&body=${encodedText}`}><Mail className="size-4 shrink-0" />{t("share.email")}</a></Button>
             </div>
           </div>
-          <div className="flex flex-col items-center rounded-xl border border-border bg-white p-4 text-center text-black">
+          <div className="flex min-w-0 flex-col items-center rounded-xl border border-border bg-white p-4 text-center text-black">
             {url ? <QRCodeSVG value={url} size={168} marginSize={1} level="M" aria-label={t("share.qr")} /> : <div className="size-[168px]" />}
             <p className="mt-3 text-xs font-semibold">{t("share.qrHelp")}</p>
           </div>

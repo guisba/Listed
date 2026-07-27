@@ -49,6 +49,10 @@ test("filtros, compartilhamento e cinco temas preservam estado no desktop e mobi
   const share = page.getByRole("dialog", { name: "Passe de entrada" });
   await expect(share).toBeVisible();
   await expect(share.getByLabel("QR code da lista")).toBeVisible();
+  expect(await share.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+  const shareBox = await share.boundingBox();
+  const qrBox = await share.getByLabel("QR code da lista").boundingBox();
+  expect(shareBox && qrBox && qrBox.x + qrBox.width <= shareBox.x + shareBox.width).toBe(true);
   await expect(share.getByRole("button", { name: code })).toBeVisible();
   await expect(share.getByRole("link", { name: "WhatsApp" })).toHaveAttribute("href", /^https:\/\/wa\.me\//);
   await expect(share.getByRole("link", { name: "Telegram" })).toHaveAttribute("href", /^https:\/\/t\.me\//);
