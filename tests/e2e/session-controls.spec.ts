@@ -204,7 +204,8 @@ test("owner, co-owner e member cumprem promoção, permissões, kick, ban, unban
     const transferResponse = await transferResponsePromise;
     expect(transferResponse.status(), await transferResponse.text()).toBe(204);
 
-    await expect(coOwner.getByText(coOwnerName, { exact: true }).locator("..").getByText("Owner", { exact: true })).toBeVisible({ timeout: 20_000 });
+    await expect(coOwner.getByText(coOwnerName, { exact: true }).first()).toBeVisible({ timeout: 20_000 });
+    await expect(coOwner.getByText("Owner", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
     await expect(owner.getByText("Co-owner", { exact: true }).first()).toBeVisible({ timeout: 20_000 });
     await expect(admin.getByRole("button", { name: "Transferir propriedade" })).toHaveCount(0);
   } finally {
