@@ -1,30 +1,32 @@
-# Segurança
+# Security
 
-## Ativos e atores
+[**English**](./security.md) · [Português (Brasil)](./security.pt-BR.md)
 
-Ativos: identidades, memberships, códigos de convite, votos, biblioteca, chaves externas e histórico. Atores: visitante anônimo, conta permanente, membro, moderador, owner e serviços server-only.
+## Assets and actors
 
-## Controles
+Assets include identities, memberships, invite codes, votes, library data, external keys, and history. Actors include anonymous visitors, permanent accounts, members, moderators, owners, and server-only services.
 
-- RLS em todas as tabelas públicas e grants explícitos; tabelas operacionais Steam não têm acesso de cliente.
-- autorização baseada em membership persistida, nunca em metadados editáveis.
-- RPCs transacionais validam `auth.uid()`, limites e status; `search_path` é fixo.
-- secret keys ficam em módulos server-only; publishable key é o único segredo-like exposto.
-- URL Steam aceita somente HTTPS e hostname exato.
-- HTML externo é reduzido a texto; handlers usam timeout, retry limitado, rate limit por identidade e respostas sem detalhes internos.
-- headers impedem framing, sniffing e acesso desnecessário a câmera/microfone/geolocalização.
-- crons exigem bearer secret, são limitados e persistem progresso; o sync pode ser retomado pelo checkpoint.
+## Controls
 
-## Riscos restantes
+- RLS is enabled on every public table with explicit grants; operational Steam tables are not client-accessible.
+- Authorization is based on persisted membership, never editable metadata.
+- Transactional RPCs validate `auth.uid()`, limits, and status; `search_path` is fixed.
+- Secret keys stay in server-only modules; the publishable key is the only secret-like value exposed to clients.
+- Steam URLs accept HTTPS only and require an exact hostname match.
+- External HTML is reduced to text; handlers use timeouts, limited retries, per-identity rate limiting, and responses that omit internal details.
+- Security headers prevent framing, MIME sniffing, and unnecessary access to camera, microphone, and geolocation.
+- Cron endpoints require a bearer secret, are rate-limited, persist progress, and can resume synchronization from checkpoints.
 
-- Anonymous Auth pode gerar abuso de armazenamento: habilitar CAPTCHA/Turnstile e revisar rate limits antes de produção.
-- Códigos curtos não são credenciais; dados permanecem protegidos por membership e fluxo RPC.
-- Store `appdetails` é não documentado: permanece desativado por padrão e possui fallback para cache/manual.
-- O rate limit em memória reduz abuso por instância, mas não substitui WAF/Upstash distribuído em produção de alto volume.
-- IA é desativada; quando habilitada, não recebe e-mails, códigos ou payloads privados.
-- O advisor sinaliza três RPCs `SECURITY DEFINER` executáveis por `authenticated`. Isso é intencional: elas são a fronteira transacional para criar, ingressar e sortear, fixam `search_path`, conferem `auth.uid()`/membership e tiveram `EXECUTE` revogado de `anon` e `public`.
-- O audit de 20/07/2026 não possui achados altos ou críticos. Restam dois moderados no PostCSS empacotado pelo Next 16; o reparo automático propõe downgrade incompatível para Next 9 e foi recusado.
+## Remaining risks
 
-## Resposta
+- Anonymous Auth can be abused for storage growth. Enable CAPTCHA/Turnstile and review rate limits before production.
+- Short invite codes are not credentials; data remains protected by membership checks and RPC flows.
+- Steam Store `appdetails` is undocumented, so it remains disabled by default with cache/manual fallbacks.
+- In-memory rate limiting reduces abuse per instance but does not replace a distributed WAF or Upstash-style limiter for high-volume production traffic.
+- AI features are disabled. If enabled, they do not receive email addresses, invite codes, or private payloads.
+- The advisor flags three `SECURITY DEFINER` RPCs executable by `authenticated`. This is intentional: they are the transactional boundary for creating, joining, and drawing; they fix `search_path`, validate `auth.uid()`/membership, and have `EXECUTE` revoked from `anon` and `public`.
+- The July 20, 2026 audit found no high or critical issues. Two moderate PostCSS findings remain in the version bundled by Next 16; the automated fix proposes an incompatible downgrade to Next 9 and was rejected.
 
-Em incidente: desative o provider/feature flag afetado, revogue a key, bloqueie o Preview, revise logs sem payload sensível, aplique migration corretiva, gere novos tipos e rode advisors + smoke tests antes da reabertura.
+## Incident response
+
+If an incident occurs, disable the affected provider or feature flag, revoke the relevant key, block Preview access if needed, review logs without exposing sensitive payloads, apply a corrective migration, regenerate types, and run advisors plus smoke tests before reopening access.
