@@ -144,7 +144,7 @@ worker/               código específico de integração com worker
 
 - [Arquitetura](docs/architecture.md)
 - [Banco de dados](docs/database.md)
-- [Segurança](docs/security.md)
+- [Segurança](docs/security.pt-BR.md)
 - [Integração com Steam](docs/steam-integration.md)
 - [Deploy](docs/deployment.md)
 - [Identidade visual](docs/brand.md)
