@@ -1,31 +1,43 @@
+<div align="center">
+
 # Listed
 
-**Listed é uma plataforma para grupos criarem listas compartilhadas de jogos, descobrirem quais opções funcionam para todos, votarem e decidirem o que jogar.**
+**Shared game lists for groups that want to decide what to play.**
 
-![Cartão social do Listed](public/og.png)
+[**English**](./README.md) · [Português (Brasil)](./README.pt-BR.md)
 
-## Estado do produto
+</div>
 
-O MVP inclui landing page com demonstração baseada em jogos reais, criação e entrada em sessões temporárias, identidade anônima Supabase, código curto, sala em tempo real, jogos manuais, seletor Steam com autocomplete local e prévia server-side, votos, propriedade, filtros combináveis, sorteio simples ou ponderado, administração por owner/co-owner, compartilhamento com QR, cinco temas, pt-BR/en-US e persistência PostgreSQL com RLS.
+![Listed social card](public/og.png)
 
-Grupos permanentes, OAuth, upgrade de conta e modos avançados já têm fundação no schema, mas continuam no roadmap. O catálogo Steam possui bootstrap e sync incremental oficiais; nenhum sync roda durante a pesquisa do usuário.
+## Overview
 
-## Stack
+Listed helps groups build a shared game list, see which options work for everyone, vote, filter the list, and choose what to play together.
 
-- Next.js 16 App Router, React 19, TypeScript estrito e Tailwind CSS 4
-- componentes no padrão shadcn/ui, Radix UI e Lucide
-- Supabase Auth, PostgreSQL, Realtime e RLS
-- Vitest, Testing Library e Playwright
-- Vercel para o deployment principal e Sites como build compatível adicional
+The current MVP includes temporary sessions, anonymous Supabase identities, short invite codes, real-time rooms, manual game entries, Steam discovery, voting, ownership tracking, combined filters, random and weighted picks, owner/co-owner controls, QR sharing, multiple themes, en-US/pt-BR UI, and PostgreSQL persistence protected by RLS.
 
-## Requisitos
+Permanent groups, OAuth/account upgrades, and more advanced group flows are planned and already have some schema groundwork.
 
-- Node.js 22.13 ou superior
+## Tech stack
+
+| Area | Stack |
+| --- | --- |
+| App | Next.js 16 App Router, React 19, TypeScript |
+| UI | Tailwind CSS 4, shadcn/ui patterns, Radix UI, Lucide |
+| Backend | Supabase Auth, PostgreSQL, Realtime, RLS |
+| Testing | Vitest, Testing Library, Playwright |
+| Deployment | Vercel, plus a Sites/vinext-compatible build |
+
+## Getting started
+
+### Requirements
+
+- Node.js 22.13+
 - npm 11+
-- projeto Supabase
-- Docker apenas para executar o stack Supabase local completo
+- A Supabase project
+- Docker only if you want to run the full Supabase stack locally
 
-## Instalação
+### Install and run
 
 ```bash
 npm ci
@@ -33,113 +45,120 @@ cp .env.example .env.local
 npm run dev:next
 ```
 
-Abra `http://localhost:3000`. O comando `npm run dev` inicia a variante compatível com Sites/vinext.
+Open [http://localhost:3000](http://localhost:3000).
 
-## Ambiente
+`npm run dev` starts the Sites/vinext-compatible development variant.
 
-### Públicas
+## Environment variables
 
-| Variável | Escopo | Obrigatória | Uso |
-| --- | --- | --- | --- |
-| `NEXT_PUBLIC_APP_URL` | público | sim | URL canônica |
-| `NEXT_PUBLIC_SUPABASE_URL` | público | sim | endpoint Supabase |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | público | sim | chave moderna de baixo privilégio |
+Copy `.env.example` to `.env.local` and configure the values for your environment.
 
-### Secretas e server-only
+### Public
 
-| Variável | Uso |
+| Variable | Purpose |
 | --- | --- |
-| `SUPABASE_SECRET_KEY` | cliente administrativo lazy; nunca vai ao browser |
-| `STEAM_WEB_API_KEY` | sincronização oficial via `IStoreService/GetAppList/v1` |
-| `CRON_SECRET` | autenticação Bearer dos endpoints cron |
+| `NEXT_PUBLIC_APP_URL` | Canonical application URL |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project endpoint |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Low-privilege Supabase publishable key |
 
-### Flags
+### Server-only
 
-- `STEAM_PROVIDER_ENABLED`: habilita a consulta server-side de detalhes.
-- `STEAM_CATALOG_SYNC_ENABLED`: habilita o catálogo incremental protegido.
+| Variable | Purpose |
+| --- | --- |
+| `SUPABASE_SECRET_KEY` | Administrative Supabase client |
+| `STEAM_WEB_API_KEY` | Official Steam catalog synchronization |
+| `CRON_SECRET` | Bearer authentication for cron endpoints |
 
-Não comite `.env.local`. Variáveis `NEXT_PUBLIC_*` são incorporadas ao bundle; nenhuma chave privilegiada pode usar esse prefixo.
+### Feature flags
+
+| Variable | Purpose |
+| --- | --- |
+| `STEAM_PROVIDER_ENABLED` | Enables server-side Steam detail lookups |
+| `STEAM_CATALOG_SYNC_ENABLED` | Enables protected incremental catalog sync |
+
+Do not commit `.env.local`. Any `NEXT_PUBLIC_*` value is bundled for the browser, so privileged keys must never use that prefix.
 
 ## Supabase
+
+Useful local commands:
 
 ```bash
 npx supabase start
 npx supabase db reset
-npx supabase migration new nome_da_mudanca
+npx supabase migration new change_name
 npx supabase test db supabase/tests/rls.sql
 ```
 
-Migrations ficam em `supabase/migrations/`; `supabase/seed.sql` não injeta jogos. Catálogos determinísticos existem somente em `tests/fixtures/`. No Dashboard, habilite **Authentication → Providers → Anonymous Sign-Ins** antes de testar sessões rápidas. Ative CAPTCHA/Turnstile antes de produção.
+Migrations live in `supabase/migrations/`. Deterministic game catalogs used by tests live under `tests/fixtures/`.
 
-O projeto usa publishable keys atuais e grants explícitos, necessários para novos projetos Supabase. Todas as 15 tabelas públicas têm RLS.
+For quick sessions, enable **Authentication → Providers → Anonymous Sign-Ins** in Supabase. CAPTCHA/Turnstile should be enabled before production use.
 
-## Catálogo Steam
+## Steam catalog
+
+Check catalog status with:
 
 ```bash
 npm run steam:catalog:status
 ```
 
-O provider oficial chama `GET https://api.steampowered.com/IStoreService/GetAppList/v1/` com `input_json` codificado e a Web API key apenas no servidor. Bootstrap e incremental usam lotes retomáveis, lease e checkpoint no Supabase. A busca live consulta somente o índice local; a seleção continua carregando detalhes sob demanda por AppID.
+Steam catalog bootstrap and incremental sync run server-side. Search uses the local index, while missing visible artwork can be enriched on demand. Steam API keys are never exposed to the browser.
 
-Resultados são entregues em duas fases: texto e imagens já armazenadas chegam na busca inicial; somente as cápsulas visíveis ausentes são enriquecidas por `POST /api/steam/search/enrich`, em lote de até 12 e concorrência 3. O ranking combina relevância textual, tipo e popularidade limitada. Popularidade usa grupos/sessões e votos distintos do Listed e recomendações oficiais já obtidas no cache de detalhes; nunca bloqueia a pesquisa.
+See [Steam integration](docs/steam-integration.md) for the full architecture and operational details.
 
-## Idiomas e demonstração
+## Useful commands
 
-O idioma é resolvido no servidor pelo cookie validado `listed_locale`; na primeira visita, o `Accept-Language` mapeia português para `pt-BR` e demais idiomas para `en-US`. A troca no header atualiza o cookie e o Server Component atual sem alterar a rota nem o código de uma sessão. Metadados e `<html lang>` acompanham a seleção. Os dicionários internos tipados ficam em `i18n/` e a paridade de chaves é testada.
+| Command | Purpose |
+| --- | --- |
+| `npm run dev:next` | Start the Next.js development server |
+| `npm run dev` | Start the Sites/vinext-compatible dev server |
+| `npm run lint` | Run ESLint |
+| `npm run typecheck` | Run TypeScript checks |
+| `npm test` | Run Vitest |
+| `npm run test:e2e` | Run Playwright E2E tests |
+| `npm run build:vercel` | Build the Vercel/Next.js target |
+| `npm run build` | Build the Sites/Cloudflare Worker target |
+| `npm run steam:catalog:status` | Inspect Steam catalog sync status |
 
-A landing resolve no servidor os AppIDs 728880, 105600 e 730. Ela lê `steam_app_index` e o cache `catalog_games` com revalidação de 12 horas; não chama a Steam pelo browser, não cria usuário e não registra sessão, voto ou popularidade. Se o cache estiver incompleto, exibe somente nome oficial conhecido, AppID e o placeholder do Listed.
-
-## Qualidade
+For E2E tests, install Chromium once with:
 
 ```bash
-npm run lint
-npm run typecheck
-npm test
-npm run test:e2e
-npm run build:vercel
-npm run build
+npx playwright install chromium
 ```
 
-Os testes E2E instalam o navegador uma única vez com `npx playwright install chromium`.
-
-## Deploy
-
-1. Configure Development, Preview e Production na Vercel com as variáveis públicas do projeto Supabase correspondente.
-2. Configure `SUPABASE_SECRET_KEY`, `CRON_SECRET` e `STEAM_WEB_API_KEY` somente no servidor; use valores distintos de `CRON_SECRET` em Preview e Production.
-3. Defina as duas flags Steam em Preview e Production; isso não publica um deployment de produção.
-4. Defina `NEXT_PUBLIC_APP_URL` com a URL canônica apenas em Production. Em Preview, o servidor usa `VERCEL_URL` automaticamente.
-5. Rode migrations e advisors.
-6. Faça push de uma branch e valide o Preview.
-7. Promova o mesmo artefato somente após smoke test.
-
-O `vercel.json` usa `npm run build:vercel`. O comando `npm run build` produz o artefato Cloudflare Worker para Sites.
-
-## Estrutura
+## Project structure
 
 ```text
-app/                 rotas e handlers
-components/          UI, temas, jogos e sessões
-features/            regras de domínio e hooks
-i18n/                detecção, dicionários tipados e APIs server/client
-lib/                 Supabase, Steam, ambiente e validação
-supabase/             migrations, seed e testes RLS
-tests/                unitários, componentes e E2E
-docs/                 arquitetura, banco, segurança e operação
-types/                domínio e tipos gerados do Supabase
+app/                 routes and request handlers
+components/          UI, themes, games, and session components
+features/            domain rules and hooks
+i18n/                locale detection and typed dictionaries
+lib/                 Supabase, Steam, environment, and validation
+supabase/             migrations, seed, and RLS tests
+tests/                unit, component, and E2E tests
+docs/                 architecture and operational documentation
+types/                domain and generated Supabase types
+worker/               worker-specific integration code
 ```
 
-Consulte [identidade visual](docs/brand.md), [arquitetura](docs/architecture.md), [banco](docs/database.md), [segurança](docs/security.md), [Steam](docs/steam-integration.md), [deploy](docs/deployment.md), [roadmap do player musical](docs/music-player-roadmap.md) e [decisões](docs/product-decisions.md).
+## Documentation
 
-## Limitações conhecidas
+- [Architecture](docs/architecture.md)
+- [Database](docs/database.md)
+- [Security](docs/security.md)
+- [Steam integration](docs/steam-integration.md)
+- [Deployment](docs/deployment.md)
+- [Brand guidelines](docs/brand.md)
+- [Product decisions](docs/product-decisions.md)
+- [Music player roadmap](docs/music-player-roadmap.md)
+- [Project progress](docs/progress.md)
 
-- Anonymous Sign-Ins deve permanecer habilitado no projeto Supabase usado pelo ambiente.
-- Google, Discord, magic link e account linking possuem interface; os providers exigem configuração no Supabase.
-- Detalhes de loja usam endpoint não documentado e permanecem atrás de feature flag.
-- O host público `api.steampowered.com` aceita Web API keys comuns; `partner.steam-api.com` exige Publisher Web API Key e não é usado pelo catálogo do Listed.
-- O E2E multicontexto depende de um ambiente Supabase de teste com autenticação anônima ativa.
-- Aprovação prévia para entrar em sessões permanece em uma segunda fase; expulsão e bloqueio persistente já são suportados.
-- O player musical é apenas um roadmap de conformidade e não adiciona SDKs ou reprodução ao produto atual.
+## Known limitations
+
+- Anonymous Sign-Ins must be enabled in the Supabase project used by the environment.
+- Google, Discord, magic-link, and account-linking UI exists, but providers still require Supabase configuration.
+- Steam store details rely on an undocumented endpoint and remain behind a feature flag.
+- Full multi-context E2E coverage depends on a test Supabase environment with anonymous authentication enabled.
 
 ## Roadmap
 
-Veja [docs/progress.md](docs/progress.md) para o estado verificável por milestone.
+For the current milestone-by-milestone status, see [`docs/progress.md`](docs/progress.md).
