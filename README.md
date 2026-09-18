@@ -8,7 +8,7 @@
 
 </div>
 
-![Listed social card](public/og.png)
+![Listed social card](public/readme-banner-en.svg)
 
 ## Overview
 
